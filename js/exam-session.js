@@ -23,14 +23,17 @@ const ExamSession = {
       return;
     }
 
-    this.renderHeaderInfo();
-    this.setupTimer();
-    this.setupFormGateway();
-    this.startProctorHeartbeatChecker();
+    // Setiap langkah dibungkus try/catch sendiri-sendiri, supaya kalau ada
+    // satu bagian gagal (misal elemen HTML tidak ditemukan), bagian
+    // keamanan & pengecekan status dari proktor (heartbeat) TETAP jalan.
+    try { this.renderHeaderInfo(); } catch (e) { console.warn('renderHeaderInfo error:', e); }
+    try { this.setupTimer(); } catch (e) { console.warn('setupTimer error:', e); }
+    try { this.setupFormGateway(); } catch (e) { console.warn('setupFormGateway error:', e); }
+    try { this.startProctorHeartbeatChecker(); } catch (e) { console.warn('heartbeat init error:', e); }
 
     // Initialize Security & Violation Guard
-    if (window.SecurityGuard) SecurityGuard.initExamSecurity();
-    if (window.ViolationTracker) ViolationTracker.init(this.session);
+    try { if (window.SecurityGuard) SecurityGuard.initExamSecurity(); } catch (e) { console.warn('SecurityGuard init error:', e); }
+    try { if (window.ViolationTracker) ViolationTracker.init(this.session); } catch (e) { console.warn('ViolationTracker init error:', e); }
   },
 
   startProctorHeartbeatChecker() {
@@ -49,7 +52,8 @@ const ExamSession = {
           return;
         }
 
-        // 2. Check Individual Session Termination
+        // 2. Check Individual Session Termination (oleh admin ATAU otomatis
+        //    oleh sistem karena batas pelanggaran terlampaui)
         const currentStatus = await window.DB.checkSessionStatus(sessId);
         if (currentStatus === 'terminated') {
           clearInterval(this._heartbeatInterval);
@@ -58,7 +62,7 @@ const ExamSession = {
       } catch(err) {
         console.warn('Heartbeat check error:', err);
       }
-    }, 2500);
+    }, 1500);
   },
 
   handleGlobalEmergencyStop() {
@@ -97,7 +101,7 @@ const ExamSession = {
     }
   },
 
-  handleForcedTermination() {
+  handleForcedTermination(customTitle, customMessage) {
     if (this.timer) this.timer.stop();
     if (window.SecurityGuard) SecurityGuard.isLocked = false;
     
@@ -124,11 +128,11 @@ const ExamSession = {
       const msgEl = document.getElementById('completionMessage');
 
       if (titleEl) {
-        titleEl.textContent = '⛔ Sesi Ujian Dihentikan Pengawas';
+        titleEl.textContent = customTitle || '⛔ Sesi Ujian Dihentikan Pengawas';
         titleEl.style.color = 'var(--danger)';
       }
       if (msgEl) {
-        msgEl.textContent = 'Sesi ujian Anda telah DIHENTIKAN SECARA PAKSA oleh Proktor / Pengawas Madrasah karena terindikasi melakukan pelanggaran atau diskualifikasi.';
+        msgEl.textContent = customMessage || 'Sesi ujian Anda telah DIHENTIKAN SECARA PAKSA oleh Proktor / Pengawas Madrasah karena terindikasi melakukan pelanggaran atau diskualifikasi.';
       }
     }
   },
