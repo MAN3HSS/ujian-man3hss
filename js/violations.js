@@ -196,6 +196,28 @@ const ViolationTracker = {
 
     // Show Warning Modal
     this.showViolationWarningModal(eventType, metadata);
+
+    // BATAS TOLERANSI TERLAMPAUI: kunci & keluarkan siswa dari ujian
+    // sekarang juga (tidak menunggu klik admin), supaya siswa tidak bisa
+    // terus mengerjakan setelah melewati batas pelanggaran.
+    if (this.violationCount >= this.maxAllowed) {
+      this.stopLoudSiren();
+      const sessId = session.session_id || session.session_token || session.session_identifier;
+      try {
+        await window.DB.updateSessionStatus(sessId, 'terminated', {
+          termination_reason: 'Batas toleransi pelanggaran terlampaui (otomatis oleh sistem)'
+        });
+      } catch (err) {
+        console.warn('Failed to auto-terminate session:', err);
+      }
+
+      if (window.ExamSession && typeof window.ExamSession.handleForcedTermination === 'function') {
+        window.ExamSession.handleForcedTermination(
+          '⛔ Batas Pelanggaran Terlampaui',
+          `Anda telah melanggar tata tertib ujian sebanyak ${this.violationCount} kali (batas maksimal ${this.maxAllowed} kali). Sesi ujian Anda DIHENTIKAN OTOMATIS oleh sistem. Silakan hubungi Proktor/Pengawas ruang jika ini merupakan kekeliruan.`
+        );
+      }
+    }
   },
 
   updateViolationUI() {
