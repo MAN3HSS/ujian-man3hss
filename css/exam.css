@@ -1,0 +1,211 @@
+/* ==============================================================================
+   PORTAL UJIAN MAN 3 HULU SUNGAI SELATAN
+   Secure Exam Mode - Dedicated Styles & Fullscreen Layout
+   ============================================================================== */
+
+.exam-body {
+  background: var(--bg-page);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Exam Sticky Header / Topbar */
+.exam-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 500;
+  background: var(--bg-glass-strong);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 2px solid var(--border-medium);
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-md);
+}
+
+.exam-info-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.exam-title-badge {
+  display: flex;
+  flex-direction: column;
+}
+
+.exam-title-text {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.exam-subject-sub {
+  font-size: 0.775rem;
+  font-weight: 700;
+  color: var(--primary-700);
+  text-transform: uppercase;
+}
+
+[data-theme="dark"] .exam-subject-sub {
+  color: var(--primary-300);
+}
+
+/* Big Smart Timer Display */
+.timer-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bg-surface);
+  border: 2px solid var(--border-medium);
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.timer-container.timer-warning {
+  border-color: var(--warning);
+  background: var(--warning-bg);
+  color: #78350f;
+  animation: pulseGlow 2s infinite;
+}
+
+.timer-container.timer-critical {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+  color: #7f1d1d;
+  animation: pulseRed 1s infinite;
+}
+
+.timer-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--primary-700);
+}
+
+.timer-digits {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--text-main);
+  min-width: 140px;
+  text-align: center;
+}
+
+.timer-warning .timer-digits,
+.timer-critical .timer-digits {
+  color: inherit;
+}
+
+/* Security Status Capsule */
+.security-capsule {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--primary-light);
+  border: 1px solid var(--primary-300);
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-full);
+  font-size: 0.825rem;
+  font-weight: 700;
+  color: var(--primary-800);
+}
+
+[data-theme="dark"] .security-capsule {
+  background: rgba(6, 78, 59, 0.5);
+  color: var(--primary-200);
+  border-color: var(--primary-700);
+}
+
+.security-capsule.alert {
+  background: var(--danger-bg);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* Violation Tracker Bar */
+.violation-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-muted);
+  color: var(--text-muted);
+}
+
+.violation-pill.active-violation {
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-weight: 800;
+  animation: pulseRed 1s infinite;
+}
+
+/* Flashing Red Strobe Effect when Alarm Triggers */
+body.siren-flashing-active {
+  animation: redAlarmStrobe 0.6s infinite alternate;
+}
+
+@keyframes redAlarmStrobe {
+  0% { box-shadow: inset 0 0 0 8px #ef4444; border-color: #ef4444; }
+  100% { box-shadow: inset 0 0 80px 20px rgba(239, 68, 68, 0.7); border-color: #b91c1c; }
+}
+
+/* Google Forms Container Frame */
+.exam-frame-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 120px);
+  background: #ffffff;
+}
+
+.exam-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  flex: 1;
+}
+
+/* External Google Form Fallback Gateway */
+.gform-gateway-card {
+  max-width: 680px;
+  margin: 3rem auto;
+  text-align: center;
+  padding: 3rem 2.5rem;
+}
+
+.gform-gateway-icon {
+  width: 72px;
+  height: 72px;
+  background: var(--primary-light);
+  color: var(--primary-700);
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+}
+
+/* Watermark */
+.security-watermark {
+  position: fixed;
+  bottom: 12px;
+  right: 16px;
+  font-size: 0.75rem;
+  color: rgba(100, 116, 139, 0.4);
+  pointer-events: none;
+  font-family: var(--font-mono);
+  z-index: 9999;
+}

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="50%" stop-color="#064e3b" />
+      <stop offset="100%" stop-color="#022c22" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+    <filter id="subtleGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#064e3b" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Outer Hexagon Badge -->
+  <polygon points="100,10 180,55 180,145 100,190 20,145 20,55" fill="url(#emeraldGrad)" stroke="url(#goldGrad)" stroke-width="6" filter="url(#subtleGlow)" />
+  
+  <!-- Inner Border Line -->
+  <polygon points="100,22 168,61 168,139 100,178 32,139 32,61" fill="none" stroke="#d1fae5" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.6" />
+
+  <!-- Madrasah Dome & Minaret Silhouette -->
+  <path d="M100,42 C106,58 116,68 128,74 L72,74 C84,68 94,58 100,42 Z" fill="url(#goldGrad)" />
+  
+  <!-- Open Book of Knowledge -->
+  <path d="M100,126 C112,118 132,116 148,122 L148,88 C132,84 112,86 100,94 C88,86 68,84 52,88 L52,122 C68,116 88,118 100,126 Z" fill="#ffffff" stroke="url(#goldGrad)" stroke-width="2.5" stroke-linejoin="round" />
+  
+  <!-- Book Spine Divider -->
+  <line x1="100" y1="94" x2="100" y2="126" stroke="#064e3b" stroke-width="3" />
+  
+  <!-- Book Page Lines -->
+  <line x1="62" y1="98" x2="90" y2="103" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" />
+  <line x1="62" y1="107" x2="90" y2="112" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" />
+  <line x1="110" y1="103" x2="138" y2="98" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" />
+  <line x1="110" y1="112" x2="138" y2="107" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Quill / Pen Symbol Center Base -->
+  <path d="M100,132 L95,148 L100,160 L105,148 Z" fill="url(#goldGrad)" />
+
+  <!-- Stars of Excellence -->
+  <circle cx="100" cy="35" r="4.5" fill="url(#goldGrad)" />
+  <circle cx="70" cy="56" r="3" fill="url(#goldGrad)" opacity="0.9" />
+  <circle cx="130" cy="56" r="3" fill="url(#goldGrad)" opacity="0.9" />
+  
+  <!-- Text Ribbon: MAN 3 HSS -->
+  <rect x="45" y="142" width="110" height="20" rx="10" fill="#022c22" stroke="url(#goldGrad)" stroke-width="1.5" />
+  <text x="100" y="156" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="10.5" fill="#fef08a" text-anchor="middle" letter-spacing="1.5">MAN 3 HSS</text>
+</svg>
