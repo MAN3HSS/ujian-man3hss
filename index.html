@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PORTAL UJIAN MAN 3 HULU SUNGAI SELATAN | Sistem Ujian Online Terintegrasi</title>
+  <meta name="description" content="Portal resmi akses ujian online MAN 3 Hulu Sungai Selatan yang terintegrasi dengan Google Forms.">
+  
+  <link rel="icon" type="image/x-icon" href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgimTBivKDSFO4bvP-J3zqbrh4EbDGIlV75ttSxc8W0EKY6Vkfgu7ks0MjswXa5pwwJKvWDrR2psJ8eOiarRdbsKRhPyhwun2yOYXgNPX3VaQmrrlM0Mk3S_q6erZztoHU/s220/LOGO-MAN-3-HSS-HD.ico">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#064e3b">
+</head>
+<body>
+
+  <!-- Offline Status Banner -->
+  <div id="offlineBanner" class="offline-banner">
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 4.243a9 9 0 01-12.728 0m0 0l2.829-2.829m-2.829 2.829L3 21m2.828-12.536a5 5 0 017.072 0m0 0l2.829 2.829" /></svg>
+    <span>Koneksi Internet Terputus. Mohon periksa sambungan internet Anda.</span>
+  </div>
+
+  <!-- Header Navigation -->
+  <header class="site-header">
+    <div class="container nav-wrapper">
+      <a href="index.html" class="brand-logo">
+        <img class="brand-logo-img" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgimTBivKDSFO4bvP-J3zqbrh4EbDGIlV75ttSxc8W0EKY6Vkfgu7ks0MjswXa5pwwJKvWDrR2psJ8eOiarRdbsKRhPyhwun2yOYXgNPX3VaQmrrlM0Mk3S_q6erZztoHU/s220/LOGO-MAN-3-HSS-HD.ico" alt="Logo MAN 3 HSS" width="40" height="40" onerror="this.src='assets/logo.svg'">
+        <div class="brand-text">
+          <span class="brand-title">MAN 3 HULU SUNGAI SELATAN</span>
+          <span class="brand-subtitle">PORTAL UJIAN RESMI</span>
+        </div>
+      </a>
+
+      <nav>
+        <ul id="mainNavMenu" class="nav-menu">
+          <li><a href="index.html" class="nav-link active">Beranda</a></li>
+          <li><a href="#pilih-kelas-menu" class="nav-link">Pilih Ujian</a></li>
+          <li><a href="guide.html" class="nav-link">Panduan Siswa</a></li>
+          <li><a href="login.html" class="nav-link">Portal Admin</a></li>
+          <li>
+            <button id="themeToggleBtn" class="btn btn-sm btn-secondary btn-icon" title="Ganti Tema" aria-label="Toggle Theme">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      <button id="mobileMenuToggle" class="menu-toggle" aria-label="Toggle Navigation">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Session Recovery Banner if Student Refreshed or Returned -->
+  <div id="sessionRecoveryBanner" class="container" style="display:none; margin-top: 1.5rem;">
+    <div class="card" style="background: linear-gradient(135deg, var(--primary-700), var(--primary-900)); color: white; display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.75rem; border: none; box-shadow: var(--shadow-md);">
+      <div style="display:flex; align-items:center; gap: 1rem;">
+        <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+          ⏱️
+        </div>
+        <div>
+          <h4 style="color:white; margin-bottom: 0.15rem;">Sesi Ujian Anda Masih Berjalan</h4>
+          <p style="color: #d1fae5; font-size: 0.875rem;" id="recoveryExamName">Matematika Wajib</p>
+        </div>
+      </div>
+      <a href="exam.html" class="btn btn-accent btn-sm">
+        LANJUTKAN UJIAN →
+      </a>
+    </div>
+  </div>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container container-narrow">
+      <div id="academicYearBadge" class="badge badge-primary animate-fade-in" style="margin-bottom: 1.25rem;">
+        <span class="status-dot active"></span> TAHUN AJARAN 2025/2026 • SEMESTER GENAP
+      </div>
+      <h1 class="animate-fade-in" style="margin-bottom: 1rem; color: var(--text-main);">
+        PORTAL UJIAN ONLINE<br>
+        <span style="color: var(--primary-700);">MAN 3 HULU SUNGAI SELATAN</span>
+      </h1>
+      <p class="animate-fade-in" style="font-size: 1.1rem; max-width: 620px; margin: 0 auto 2rem; color: var(--text-muted);">
+        Silakan pilih jenjang kelas atau jenis ujian yang tersedia di bawah, kemudian masukkan token resmi yang diberikan oleh proktor.
+      </p>
+      
+      <div class="hero-actions animate-fade-in">
+        <a href="#pilih-kelas-menu" class="btn btn-primary btn-lg">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+          PILIH KELAS & MULAI
+        </a>
+        <a href="guide.html" class="btn btn-secondary btn-lg">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+          PANDUAN SISWA
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature Grid Section (6 Original Cards) -->
+  <section class="container">
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">🛡️</div>
+        <h3 class="feature-title">Secure Exam Mode</h3>
+        <p class="feature-desc">Perlindungan sesi, anti beralih tab, dan kunci layar penuh selama ujian berlangsung.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">⏱️</div>
+        <h3 class="feature-title">Smart Timer</h3>
+        <p class="feature-desc">Timer otomatis server-synced yang tidak dapat dimanipulasi oleh perubahan jam lokal.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">🔑</div>
+        <h3 class="feature-title">Token Access</h3>
+        <p class="feature-desc">Akses terverifikasi menggunakan token resmi ujian yang diatur dan dibagikan oleh proktor.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">🎓</div>
+        <h3 class="feature-title">Class Control</h3>
+        <p class="feature-desc">Menu rapi berdasarkan jenjang Kelas X, XI, XII, Ujian Susulan, dan Remedial.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">📝</div>
+        <h3 class="feature-title">Google Forms Integration</h3>
+        <p class="feature-desc">Terintegrasi langsung ke lembar soal Google Forms dalam mode terkunci yang aman.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">📱</div>
+        <h3 class="feature-title">Multi Device & PWA</h3>
+        <p class="feature-desc">Dapat diakses nyaman melalui HP Android, iPhone, iPad, laptop, dan komputer.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Student Exam Selection Section (Per-Class Menu Selector) -->
+  <section id="pilih-kelas-menu" style="padding: 2rem 0 5rem;">
+    <div class="container">
+      
+      <!-- Menu-Based Class & Category Selector -->
+      <div style="margin-bottom: 2rem;">
+        <div style="margin-bottom: 1.25rem;">
+          <h2 style="font-size: 1.5rem; margin-bottom: 0.25rem;">PILIH JENJANG & KELAS ANDA</h2>
+          <p style="font-size: 0.9rem; color: var(--text-muted);">Klik menu di bawah untuk menampilkan mata pelajaran yang sesuai:</p>
+        </div>
+
+        <!-- Injected via ClassesManager -->
+        <div id="classSelectorContainer"></div>
+      </div>
+
+      <!-- Exam Cards Grid -->
+      <div id="examListContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.75rem; margin-top: 1.5rem;">
+        <!-- Dynamically rendered by ExamsManager -->
+      </div>
+
+    </div>
+  </section>
+
+  <!-- MODAL: Student Verification (Pilih Kelas, Pilih Nama & No Peserta, Token Masuk) -->
+  <div id="tokenModal" class="modal-backdrop">
+    <div class="modal-container" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <svg width="22" height="22" style="color:var(--primary-600)" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+          IDENTITAS & TOKEN MASUK UJIAN
+        </h3>
+        <button class="modal-close" onclick="ExamsManager.closeTokenModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div style="background: var(--bg-surface-muted); padding: 0.9rem 1.15rem; border-radius: var(--radius-md); margin-bottom: 1.25rem; border: 1px solid var(--border-subtle);">
+          <div id="modalExamSubject" style="font-size: 0.775rem; font-weight: 700; color: var(--primary-700); text-transform: uppercase;">MATEMATIKA</div>
+          <div id="modalExamTitle" style="font-weight: 800; font-size: 1.05rem; color: var(--text-main); margin-bottom: 0.25rem;">Asesmen Sumatif Akhir Semester</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">Durasi Pengerjaan: <strong id="modalExamDuration">90 Menit</strong></div>
+        </div>
+
+        <!-- 1. Pilih Kelas -->
+        <div class="form-group">
+          <label class="form-label" for="studentClassSelect">1. Pilih Kelas / Rombel Anda</label>
+          <select id="studentClassSelect" class="form-select" onchange="ExamsManager.onModalClassChange()" required>
+            <option value="">-- Pilih Kelas Anda --</option>
+          </select>
+        </div>
+
+        <!-- 2. Pilih Nama Siswa & No Peserta dari Kelas -->
+        <div class="form-group">
+          <label class="form-label" for="studentNameSelect">2. Pilih Nama & Nomor Peserta</label>
+          <select id="studentNameSelect" class="form-select" onchange="ExamsManager.onStudentNameChange()" required>
+            <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
+          </select>
+          <div id="studentNumberBadge" style="display: none; margin-top: 0.4rem; font-size: 0.825rem; color: var(--primary-800); font-weight: 700; font-family: var(--font-mono); background: var(--primary-light); padding: 0.3rem 0.65rem; border-radius: var(--radius-sm); width: fit-content; border: 1px solid var(--primary-200);">
+            Nomor Peserta: <span id="studentNumberText">-</span>
+          </div>
+        </div>
+
+        <!-- 3. Token Masuk -->
+        <div class="form-group">
+          <label class="form-label" for="tokenInput">3. Token Masuk Ujian</label>
+          <input type="text" id="tokenInput" class="form-input form-input-token" placeholder="MASUKKAN TOKEN" maxlength="12" autocomplete="off">
+          <div style="font-size: 0.775rem; color: var(--text-muted); text-align: center; margin-top: 0.4rem;">
+            💡 Masukkan token masuk yang diberikan oleh proktor pengawas ruang.
+          </div>
+        </div>
+
+        <div id="tokenErrorMsg" style="display: none; padding: 0.75rem 1rem; border-radius: var(--radius-md); background: var(--danger-bg); color: var(--danger); font-size: 0.85rem; font-weight: 600; margin-top: 0.85rem; text-align: center;">
+          Data tidak lengkap atau token salah.
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; gap: 0.75rem;">
+        <button class="btn btn-secondary" style="flex:1;" onclick="ExamsManager.closeTokenModal()">Batal</button>
+        <button id="btnVerifyToken" class="btn btn-primary" style="flex:2;" onclick="ExamsManager.submitTokenVerification()">
+          VERIFIKASI & LANJUT
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Device Diagnostic & Exam Rules Confirmation -->
+  <div id="confirmModal" class="modal-backdrop">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <svg width="22" height="22" style="color:var(--primary-600)" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+          PEMERIKSAAN PERANGKAT & TATA TERTIB
+        </h3>
+        <button class="modal-close" onclick="ExamsManager.closeConfirmModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">
+          1. Hasil Diagnostik Perangkat
+        </h4>
+        
+        <div style="margin-bottom: 1.5rem;">
+          <div class="check-item">
+            <span class="check-label">📱 Jenis Perangkat</span>
+            <span id="diagDevice" class="check-status status-ok">-</span>
+          </div>
+          <div class="check-item">
+            <span class="check-label">🌐 Peramban (Browser)</span>
+            <span id="diagBrowser" class="check-status status-ok">-</span>
+          </div>
+          <div class="check-item">
+            <span class="check-label">📶 Status Jaringan</span>
+            <span id="diagNetwork" class="check-status status-ok">Terhubung</span>
+          </div>
+          <div class="check-item">
+            <span class="check-label">🖥️ Mode Layar Penuh</span>
+            <span id="diagFullscreen" class="check-status status-ok">Didukung</span>
+          </div>
+        </div>
+
+        <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">
+          2. Tata Tertib Ujian
+        </h4>
+        
+        <ul style="font-size: 0.875rem; color: var(--text-main); margin-bottom: 1.5rem; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem;">
+          <li>Kerjakan ujian secara mandiri dan jujur.</li>
+          <li><strong>Dilarang beralih tab, meminimalkan jendela, atau membuka aplikasi lain.</strong></li>
+          <li>Aktivitas meninggalkan jendela ujian akan dicatat otomatis sebagai pelanggaran.</li>
+          <li>Untuk mengakhiri ujian, Anda akan diminta memasukkan <strong>Token Keluar</strong> dari pengawas.</li>
+        </ul>
+
+        <div style="background: var(--bg-surface-muted); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-medium);">
+          <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer;">
+            <input type="checkbox" id="ruleAgreementCheckbox" onchange="document.getElementById('btnStartExamGateway').disabled = !this.checked;" style="margin-top: 3px; width: 18px; height: 18px;">
+            <span style="font-size: 0.875rem; font-weight: 600; color: var(--text-main);">
+              Saya memahami dan menyetujui seluruh peraturan ujian di atas serta siap mengikuti ujian dengan tertib.
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="ExamsManager.closeConfirmModal()">Kembali</button>
+        <button id="btnStartExamGateway" class="btn btn-primary" disabled onclick="ExamsManager.launchExamGateway()">
+          SIAP, MULAI UJIAN 🚀
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="brand-logo" style="margin-bottom: 0.75rem;">
+            <img class="brand-logo-img" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgimTBivKDSFO4bvP-J3zqbrh4EbDGIlV75ttSxc8W0EKY6Vkfgu7ks0MjswXa5pwwJKvWDrR2psJ8eOiarRdbsKRhPyhwun2yOYXgNPX3VaQmrrlM0Mk3S_q6erZztoHU/s220/LOGO-MAN-3-HSS-HD.ico" alt="Logo MAN 3 HSS" width="36" height="36" onerror="this.src='assets/logo.svg'">
+            <span class="brand-title">PORTAL UJIAN MAN 3 HSS</span>
+          </div>
+          <p>
+            Sistem Ujian Online Terintegrasi MAN 3 Hulu Sungai Selatan. Menyediakan jalur asesmen yang aman, tertib, dan transparan.
+          </p>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Navigasi Siswa</h4>
+          <ul class="footer-links">
+            <li><a href="index.html#pilih-kelas-menu">Pilih Ujian</a></li>
+            <li><a href="guide.html">Panduan Siswa</a></li>
+            <li><a href="login.html">Login Proktor</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Madrasah</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+            MAN 3 Hulu Sungai Selatan<br>
+            Provinsi Kalimantan Selatan<br>
+            Email: proktor@man3hss.sch.id
+          </p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>&copy; 2026 MAN 3 Hulu Sungai Selatan. Hak Cipta Dilindungi.</span>
+        <span>Secure Exam Gateway Engine v3.3</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/storage.js"></script>
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-client.js"></script>
+  <script src="js/classes.js"></script>
+  <script src="js/exams.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

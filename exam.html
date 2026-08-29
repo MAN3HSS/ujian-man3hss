@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SESI UJIAN AKTIF | MAN 3 HULU SUNGAI SELATAN</title>
+  
+  <link rel="icon" type="image/x-icon" href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgimTBivKDSFO4bvP-J3zqbrh4EbDGIlV75ttSxc8W0EKY6Vkfgu7ks0MjswXa5pwwJKvWDrR2psJ8eOiarRdbsKRhPyhwun2yOYXgNPX3VaQmrrlM0Mk3S_q6erZztoHU/s220/LOGO-MAN-3-HSS-HD.ico">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/exam.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body class="exam-body" oncontextmenu="return false;">
+
+  <!-- Fullscreen Loss Enforcement Overlay -->
+  <div id="fullscreenLockOverlay" style="display: none; position: fixed; inset: 0; background: rgba(2, 44, 34, 0.96); backdrop-filter: blur(16px); z-index: 99999; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; text-align: center; color: white;">
+    <div style="font-size: 3.5rem; margin-bottom: 1rem;">🔒</div>
+    <h2 style="font-size: 1.85rem; color: #fef08a; margin-bottom: 0.5rem;">MODE LAYAR PENUH TERLEPAS</h2>
+    <p style="font-size: 1rem; color: #d1fae5; max-width: 480px; margin-bottom: 2rem; line-height: 1.5;">
+      Ujian berada dalam mode terkunci. Anda harus mengunci kembali layar penuh untuk melanjutkan pengerjaan soal.
+    </p>
+    <button class="btn btn-accent btn-lg" onclick="SecurityGuard.attemptFullscreen()" style="font-weight: 800; font-size: 1.1rem; padding: 1rem 2.5rem;">
+      KUNCI KEMBALI LAYAR PENUH 🔐
+    </button>
+  </div>
+
+  <!-- Main Active Exam Interface -->
+  <div id="examMainContent" style="display: flex; flex-direction: column; min-height: 100vh; width: 100%;">
+    
+    <!-- Exam Sticky Topbar -->
+    <header class="exam-topbar">
+      
+      <!-- Left: Exam Title, Subject & Student Name -->
+      <div class="exam-info-header">
+        <img class="brand-logo-img" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgimTBivKDSFO4bvP-J3zqbrh4EbDGIlV75ttSxc8W0EKY6Vkfgu7ks0MjswXa5pwwJKvWDrR2psJ8eOiarRdbsKRhPyhwun2yOYXgNPX3VaQmrrlM0Mk3S_q6erZztoHU/s220/LOGO-MAN-3-HSS-HD.ico" alt="Logo" width="36" height="36" onerror="this.src='assets/logo.svg'">
+        <div class="exam-title-badge">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span id="examHeaderSubject" class="exam-subject-sub">MATEMATIKA</span>
+            <span id="examStudentBadge" class="badge badge-primary" style="font-size: 0.72rem; padding: 0.2rem 0.6rem;">Siswa</span>
+          </div>
+          <span id="examHeaderTitle" class="exam-title-text">Asesmen Sumatif Akhir Semester</span>
+        </div>
+      </div>
+
+      <!-- Center: Smart Countdown Timer -->
+      <div id="timerContainer" class="timer-container">
+        <svg class="timer-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span id="timerDisplay" class="timer-digits">-- : -- : --</span>
+      </div>
+
+      <!-- Right: Security Badge, Violations & Finish Action -->
+      <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+        <div class="security-capsule" title="Mode Keamanan Aktif">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          <span>TERKUNCI & TERPANTAU</span>
+        </div>
+
+        <div id="violationPill" class="violation-pill" title="Toleransi Pelanggaran">
+          <span>⚠️ Pelanggaran:</span>
+          <strong id="violationCountDisplay">0 / 3</strong>
+        </div>
+
+        <button class="btn btn-sm btn-danger" onclick="ExamSession.confirmFinishExam()">
+          SELESAI UJIAN
+        </button>
+      </div>
+    </header>
+
+    <!-- Google Forms Dynamic Container -->
+    <main id="examFrameContainer" class="exam-frame-container">
+      <!-- Injected by exam-session.js -->
+    </main>
+
+  </div>
+
+  <!-- Final Completion Screen -->
+  <div id="completionScreen" style="display: none; min-height: 100vh; width: 100%; align-items: center; justify-content: center; padding: 2rem; background: var(--bg-page);">
+    <div class="card card-elevated animate-fade-in" style="max-width: 540px; width: 100%; text-align: center; padding: 3.5rem 2.5rem;">
+      <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--success-bg); color: var(--success); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem;">
+        ✓
+      </div>
+      <h2 id="completionTitle" style="font-size: 1.75rem; margin-bottom: 0.75rem; color: var(--text-main);">
+        Ujian Telah Selesai
+      </h2>
+      <p id="completionMessage" style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 2rem;">
+        Terima kasih telah mengerjakan ujian dengan jujur dan tertib. Sesi ujian Anda telah resmi diakhiri dan tercatat pada portal MAN 3 Hulu Sungai Selatan.
+      </p>
+
+      <div style="display: flex; justify-content: center;">
+        <a href="index.html" class="btn btn-primary btn-lg">
+          KEMBALI KE PORTAL UTAMA
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Violation Warning Alert -->
+  <div id="violationModal" class="modal-backdrop">
+    <div class="modal-container" style="border: 2px solid var(--danger); max-width: 500px;">
+      <div class="modal-header" style="background: var(--danger-bg); border-color: var(--danger);">
+        <h3 id="violationModalTitle" class="modal-title" style="color: var(--danger);">
+          ⚠️ PERINGATAN PELANGGARAN
+        </h3>
+      </div>
+      <div class="modal-body" style="text-align: center; padding: 2rem 1.5rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🚨</div>
+        <p id="violationModalMessage" style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 1.25rem;">
+          Anda terdeteksi meninggalkan halaman ujian. Tindakan ini telah dicatat oleh sistem proktor.
+        </p>
+        <div style="background: var(--bg-surface-muted); padding: 0.85rem; border-radius: var(--radius-md); font-size: 0.875rem;">
+          Toleransi Pelanggaran: <strong id="violationModalCount" style="color: var(--danger);">1 dari 3</strong>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: center;">
+        <button class="btn btn-primary btn-lg btn-block" onclick="ViolationTracker.dismissViolationModal()">
+          SAYA PAHAM & KEMBALI KE UJIAN
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Selesai Ujian & Verifikasi TOKEN KELUAR -->
+  <div id="finishConfirmModal" class="modal-backdrop">
+    <div class="modal-container" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <svg width="22" height="22" style="color:var(--danger)" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+          KONFIRMASI TOKEN KELUAR
+        </h3>
+        <button class="modal-close" onclick="ExamSession.closeFinishModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 1.25rem;">
+          Pastikan Anda telah menekan tombol <strong>Kirim / Submit</strong> pada Google Forms. Untuk keluar dari aplikasi, masukkan <strong>Token Keluar</strong> yang diberikan oleh pengawas ruangan:
+        </p>
+
+        <div class="form-group">
+          <label class="form-label" for="exitTokenInput" style="text-align: center;">Masukkan Token Keluar Ujian</label>
+          <input type="text" id="exitTokenInput" class="form-input form-input-token" placeholder="TOKEN KELUAR" maxlength="12" autocomplete="off">
+        </div>
+
+        <div id="exitTokenError" style="display: none; padding: 0.75rem 1rem; border-radius: var(--radius-md); background: var(--danger-bg); color: var(--danger); font-size: 0.85rem; font-weight: 600; text-align: center; margin-top: 0.75rem;">
+          Token Keluar salah. Minta token kepada pengawas.
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; gap: 0.75rem;">
+        <button class="btn btn-secondary" style="flex:1;" onclick="ExamSession.closeFinishModal()">Kembali</button>
+        <button id="btnSubmitExitToken" class="btn btn-danger" style="flex:2;" onclick="ExamSession.verifyAndFinishExam()">
+          SELESAIKAN & KELUAR
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Watermark -->
+  <div class="security-watermark">
+    GATEWAY • MAN 3 HSS • WITA
+  </div>
+
+  <!-- Scripts -->
+  <script src="config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/storage.js"></script>
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-client.js"></script>
+  <script src="js/timer.js"></script>
+  <script src="js/security.js"></script>
+  <script src="js/violations.js"></script>
+  <script src="js/exam-session.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      ExamSession.init();
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,75 @@
+rules_version = '2';
+
+// PORTAL UJIAN MAN 3 HULU SUNGAI SELATAN — Firestore Security Rules
+//
+// Prinsip:
+// - Siswa (belum login) HANYA boleh: baca ujian & kelas, membuat sesi ujian
+//   & pelanggaran, dan mengubah sesi miliknya sendiri (via app logic).
+// - Semua operasi tulis/hapus untuk data master (exams, classes, students)
+//   dan operasi admin (monitoring, hapus sesi/pelanggaran) HANYA boleh oleh
+//   user yang sudah login (Firebase Auth = akun admin/proktor).
+//
+// Catatan: aturan ini cukup permisif untuk sesi & pelanggaran (create oleh
+// siapa saja) karena siswa mengakses tanpa login — mirroring cara kerja
+// aplikasi ini sebelumnya. Untuk keamanan lebih ketat, pertimbangkan
+// menambahkan validasi field pada create.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null;
+    }
+
+    // Data master ujian: publik boleh baca (untuk cek jadwal/token),
+    // hanya admin yang boleh tulis/ubah/hapus.
+    match /exams/{examId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Kelas: publik boleh baca, admin yang kelola.
+    match /classes/{classId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Data siswa: publik boleh baca (untuk pencocokan nama saat login ujian),
+    // hanya admin yang boleh tulis/ubah/hapus.
+    match /students/{studentId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Sesi ujian: siswa boleh membuat sesi baru & memperbarui sesinya sendiri
+    // (progres, pelanggaran, status selesai). Admin boleh baca semua & hapus.
+    match /sessions/{sessionId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if isAdmin();
+    }
+
+    // Pelanggaran: siswa (via app) boleh mencatat pelanggaran pada sesinya,
+    // admin boleh baca & hapus.
+    match /violations/{violationId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // Pengaturan global (jeda ujian, tahun ajaran, dll): publik boleh baca,
+    // hanya admin yang boleh ubah.
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Profil admin (nama, role): hanya pemilik akun & admin lain yang login
+    // boleh baca/tulis profil miliknya.
+    match /profiles/{userId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin() && request.auth.uid == userId;
+    }
+  }
+}

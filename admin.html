@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Admin Proktor | PORTAL UJIAN MAN 3 HSS</title>
+  
+  <link rel="icon" type="image/x-icon" href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgimTBivKDSFO4bvP-J3zqbrh4EbDGIlV75ttSxc8W0EKY6Vkfgu7ks0MjswXa5pwwJKvWDrR2psJ8eOiarRdbsKRhPyhwun2yOYXgNPX3VaQmrrlM0Mk3S_q6erZztoHU/s220/LOGO-MAN-3-HSS-HD.ico">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <!-- SheetJS Library for Pure Excel (.xlsx) Import & Export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body class="admin-body">
+
+  <div class="admin-layout">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="sidebar-brand">
+        <a href="index.html" style="display: flex; align-items: center; gap: 0.75rem; color: inherit; text-decoration: none;">
+          <img class="brand-logo-img" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgimTBivKDSFO4bvP-J3zqbrh4EbDGIlV75ttSxc8W0EKY6Vkfgu7ks0MjswXa5pwwJKvWDrR2psJ8eOiarRdbsKRhPyhwun2yOYXgNPX3VaQmrrlM0Mk3S_q6erZztoHU/s220/LOGO-MAN-3-HSS-HD.ico" alt="Logo MAN 3 HSS" width="36" height="36" onerror="this.src='assets/logo.svg'">
+          <div>
+            <div style="font-weight: 800; font-size: 0.95rem; line-height: 1.1; color: var(--primary-800);">MAN 3 HSS</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700;">PANEL PROKTOR</div>
+          </div>
+        </a>
+      </div>
+
+      <nav class="sidebar-menu">
+        <div class="sidebar-section-title">UTAMA</div>
+        <button class="sidebar-item active" data-tab="dashboard">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+          <span>Dashboard</span>
+        </button>
+
+        <div class="sidebar-section-title">MANAJEMEN</div>
+        <button class="sidebar-item" data-tab="exams">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+          <span>Jadwal Ujian</span>
+        </button>
+
+        <button class="sidebar-item" data-tab="classes">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+          <span>Daftar Kelas</span>
+        </button>
+
+        <button class="sidebar-item" data-tab="students">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+          <span>Data Siswa & No Peserta</span>
+        </button>
+
+        <div class="sidebar-section-title">PENGAWASAN</div>
+        <button class="sidebar-item" data-tab="attendance">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+          <span>Status Kehadiran Siswa</span>
+        </button>
+
+        <button class="sidebar-item" data-tab="monitoring">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+          <span>Monitoring Realtime</span>
+        </button>
+
+        <button class="sidebar-item" data-tab="violations">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          <span>Log Pelanggaran</span>
+        </button>
+
+        <div class="sidebar-section-title">SISTEM</div>
+        <button class="sidebar-item" data-tab="settings">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+          <span>Pengaturan Portal</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="btn btn-sm btn-secondary btn-block" onclick="AuthManager.logout()">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+          Keluar (Logout)
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="admin-main">
+      
+      <!-- Topbar Header -->
+      <header class="admin-topbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button class="menu-toggle" onclick="document.getElementById('adminSidebar').classList.toggle('open')">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+          <div class="admin-search-wrapper">
+            <svg class="admin-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            <input type="text" class="admin-search-input" placeholder="Cari ujian, kelas, atau siswa...">
+          </div>
+        </div>
+
+        <div class="admin-topbar-actions">
+          <button id="btnGlobalExamControl" class="btn btn-sm btn-danger" onclick="AdminController.toggleGlobalExamPause()" title="Hentikan sementara seluruh ujian untuk semua siswa">
+            ⛔ Hentikan Semua Ujian
+          </button>
+          <a href="index.html" target="_blank" class="btn btn-sm btn-secondary" title="Buka Halaman Siswa">
+            👁️ Lihat Portal Siswa
+          </a>
+
+          <div class="user-profile-badge">
+            <div class="user-avatar">AD</div>
+            <div style="display:flex; flex-direction:column; line-height:1.2;">
+              <span id="adminUserName" style="font-weight:700; font-size:0.85rem;">Proktor Madrasah</span>
+              <span id="adminUserRole" style="font-size:0.7rem; color:var(--primary-700); font-weight:700;">ADMIN</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Admin Content Area -->
+      <div class="admin-content">
+
+        <!-- TAB 1: DASHBOARD -->
+        <div id="tab-dashboard" class="admin-tab-content">
+          <div class="admin-page-header">
+            <div>
+              <h1 class="admin-page-title">Dashboard Proktor</h1>
+              <p class="admin-page-subtitle">Ringkasan aktivitas ujian dan pengawasan sesi madrasah hari ini.</p>
+            </div>
+            <div style="display:flex; gap:0.5rem;">
+              <button class="btn btn-sm btn-primary" onclick="AdminController.openAddExamModal()">+ Tambah Ujian</button>
+              <button class="btn btn-sm btn-secondary" onclick="AdminController.openAddClassModal()">+ Tambah Kelas</button>
+            </div>
+          </div>
+
+          <!-- 5 Big KPI Metrics -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-icon primary">📋</div>
+              <div class="kpi-data">
+                <span id="kpiTotalExams" class="kpi-value">0</span>
+                <span class="kpi-label">Total Ujian</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon primary">🟢</div>
+              <div class="kpi-data">
+                <span id="kpiActiveExams" class="kpi-value">0</span>
+                <span class="kpi-label">Ujian Aktif</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon info">👥</div>
+              <div class="kpi-data">
+                <span id="kpiActiveSessions" class="kpi-value">0</span>
+                <span class="kpi-label">Sesi Siswa Berjalan</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon accent">🏫</div>
+              <div class="kpi-data">
+                <span id="kpiTotalClasses" class="kpi-value">0</span>
+                <span class="kpi-label">Total Kelas</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon danger">⚠️</div>
+              <div class="kpi-data">
+                <span id="kpiTodayViolations" class="kpi-value">0</span>
+                <span class="kpi-label">Pelanggaran Hari Ini</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mini Recent Exams Table -->
+          <div class="card" style="margin-top: 1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+              <h3 style="font-size: 1.15rem;">Jadwal Ujian Terbaru</h3>
+              <button class="btn btn-sm btn-outline" onclick="AdminController.switchTab('exams')">Lihat Semua Ujian →</button>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Judul Ujian</th>
+                    <th>Mata Pelajaran</th>
+                    <th>Tipe</th>
+                    <th>Durasi</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="recentExamsMiniBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: JADWAL UJIAN (WITH DATE, TYPE & STATUS FILTERS) -->
+        <div id="tab-exams" class="admin-tab-content" style="display: none;">
+          <div class="admin-page-header">
+            <div>
+              <h1 class="admin-page-title">Manajemen Jadwal Ujian</h1>
+              <p class="admin-page-subtitle">Atur Token Masuk, Token Keluar, Google Form URL, dan saklar Aktif/Nonaktif.</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="AdminController.openAddExamModal()">
+              + Buat Jadwal Ujian Baru
+            </button>
+          </div>
+
+          <!-- Exam Filter Bar -->
+          <div class="card" style="margin-bottom: 1.25rem; padding: 1rem 1.25rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">📅 Tanggal:</label>
+              <input type="date" id="adminExamDateFilter" class="form-input" style="max-width: 170px;" onchange="AdminController.renderExamsAdminTable()">
+            </div>
+            <button class="btn btn-sm btn-outline" onclick="AdminController.filterExamsToday()" title="Tampilkan jadwal hari ini saja">
+              📅 Hari Ini
+            </button>
+            <input type="text" id="adminExamSearchInput" class="form-input" style="max-width: 230px;" placeholder="🔍 Cari mapel / judul..." oninput="AdminController.renderExamsAdminTable()">
+            <select id="adminExamTypeFilter" class="form-select" style="max-width: 160px;" onchange="AdminController.renderExamsAdminTable()">
+              <option value="">Semua Kategori</option>
+              <option value="Ujian Utama">Ujian Utama</option>
+              <option value="Ujian Susulan">Ujian Susulan</option>
+              <option value="Remedial">Remedial</option>
+              <option value="Try Out">Try Out</option>
+              <option value="Khusus">Khusus</option>
+            </select>
+            <select id="adminExamStatusFilter" class="form-select" style="max-width: 150px;" onchange="AdminController.renderExamsAdminTable()">
+              <option value="">Semua Status</option>
+              <option value="active">🟢 Aktif</option>
+              <option value="inactive">🔴 Nonaktif</option>
+            </select>
+            <button class="btn btn-sm btn-secondary" onclick="AdminController.resetExamFilters()">
+              Reset Filter
+            </button>
+          </div>
+
+          <div class="card" style="padding: 0; overflow: hidden;">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Mata Pelajaran & Token</th>
+                    <th>Jadwal Pelaksanaan</th>
+                    <th>Kategori / Tipe</th>
+                    <th>Durasi</th>
+                    <th>Status Tampil</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="adminExamsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: DAFTAR KELAS -->
+        <div id="tab-classes" class="admin-tab-content" style="display: none;">
+          <div class="admin-page-header">
+            <div>
+              <h1 class="admin-page-title">Daftar Kelas & Rombel</h1>
+              <p class="admin-page-subtitle">Kelola tingkatan kelas (X, XI, XII) dan rombongan belajar madrasah.</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="AdminController.openAddClassModal()">
+              + Tambah Kelas Baru
+            </button>
+          </div>
+
+          <div class="card" style="padding: 0; overflow: hidden;">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Nama Kelas / Rombel</th>
+                    <th>Tingkat Jenjang</th>
+                    <th>Keterangan</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="adminClassesTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: MASTER DATA SISWA & NO PESERTA (WITH EXCEL IMPORT & DOWNLOAD TEMPLATE & BULK DELETE) -->
+        <div id="tab-students" class="admin-tab-content" style="display: none;">
+          <div class="admin-page-header">
+            <div>
+              <h1 class="admin-page-title">Master Data Siswa & Nomor Peserta</h1>
+              <p class="admin-page-subtitle">Daftar siswa resmi per-kelas yang otomatis muncul pada pilihan nama siswa saat masuk ujian.</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn btn-sm btn-outline" onclick="AdminController.downloadStudentExcelTemplate()">
+                📄 Unduh Template Excel (.xlsx)
+              </button>
+              <button class="btn btn-sm btn-secondary" onclick="AdminController.openImportStudentsModal()">
+                📥 Impor File Excel (.xlsx)
+              </button>
+              <button class="btn btn-sm btn-primary" onclick="AdminController.openAddStudentModal()">
+                + Tambah Siswa Baru
+              </button>
+            </div>
+          </div>
+
+          <!-- Student Filter & Bulk Actions Bar -->
+          <div class="card" style="margin-bottom: 1.25rem; padding: 1rem 1.25rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; flex: 1;">
+              <input type="text" id="adminStudentSearchInput" class="form-input" style="max-width: 250px;" placeholder="🔍 Cari nama / no peserta..." oninput="AdminController.renderStudentsTable()">
+              <select id="adminStudentClassFilter" class="form-select" style="max-width: 180px;" onchange="AdminController.renderStudentsTable()">
+                <option value="">Semua Kelas</option>
+              </select>
+              
+              <!-- Bulk Delete Action Button (Visible when items selected) -->
+              <button id="btnDeleteSelectedStudents" class="btn btn-sm btn-danger animate-fade-in" style="display: none;" onclick="AdminController.deleteSelectedStudents()">
+                🗑️ Hapus Ditandai (<span id="selectedStudentCount">0</span>)
+              </button>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <button class="btn btn-sm btn-outline" style="color: var(--danger); border-color: var(--danger);" onclick="AdminController.clearAllStudents()" title="Hapus semua data siswa sekaligus">
+                🗑️ Kosongkan Data Siswa
+              </button>
+              <div id="studentCountBadge" style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">
+                Total: 0 Siswa
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="padding: 0; overflow: hidden;">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width: 40px; text-align: center;">
+                      <input type="checkbox" id="selectAllStudentsCheckbox" title="Pilih Semua Siswa" onchange="AdminController.toggleSelectAllStudents(this)" style="width: 16px; height: 16px; cursor: pointer;">
+                    </th>
+                    <th style="width: 45px;">No</th>
+                    <th>Nomor Peserta</th>
+                    <th>Nama Lengkap Siswa</th>
+                    <th>Kelas / Rombel</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="adminStudentsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 5: KEHADIRAN & STATUS PESERTA REALTIME (KHUSUS PROKTOR ADMIN) -->
+        <div id="tab-attendance" class="admin-tab-content" style="display: none;">
+          <div class="admin-page-header">
+            <div>
+              <h1 class="admin-page-title">Rekap Kehadiran & Status Siswa Realtime</h1>
+              <p class="admin-page-subtitle">Pantau seluruh peserta yang sedang aktif mengerjakan atau telah menyelesaikan ujian per-kelas.</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-sm btn-secondary" onclick="AdminController.exportAttendanceCSV()">
+                📥 Unduh Rekap Kehadiran (CSV/Excel)
+              </button>
+              <button class="btn btn-sm btn-primary" onclick="AdminController.renderAttendanceTable()">
+                🔄 Refresh Data
+              </button>
+            </div>
+          </div>
+
+          <!-- Attendance Filter Bar -->
+          <div class="card" style="margin-bottom: 1.25rem; padding: 1rem 1.25rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+            <input type="text" id="attSearchInput" class="form-input" style="max-width: 240px;" placeholder="🔍 Cari nama siswa..." oninput="AdminController.renderAttendanceTable()">
+            <select id="attGradeFilter" class="form-select" style="max-width: 170px;" onchange="AdminController.onAttendanceGradeChange()">
+              <option value="">Semua Tingkat</option>
+              <option value="X">Tingkat X</option>
+              <option value="XI">Tingkat XI</option>
+              <option value="XII">Tingkat XII</option>
+            </select>
+            <select id="attClassFilter" class="form-select" style="max-width: 170px;" onchange="AdminController.renderAttendanceTable()">
+              <option value="">Semua Rombel</option>
+            </select>
+            <select id="attStatusFilter" class="form-select" style="max-width: 170px;" onchange="AdminController.renderAttendanceTable()">
+              <option value="">Semua Status</option>
+              <option value="active">Sedang Mengerjakan</option>
+              <option value="completed">Selesai</option>
+              <option value="expired">Waktu Habis</option>
+              <option value="suspicious">Mencurigakan</option>
+            </select>
+          </div>
+
+          <div class="card" style="padding: 0; overflow: hidden;">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width: 50px;">No</th>
+                    <th>Nama & No. Peserta</th>
+                    <th>Kelas</th>
+                    <th>Mata Pelajaran</th>
+                    <th>Waktu Masuk</th>
+                    <th>Sisa Waktu / Batas</th>
+                    <th>Pelanggaran</th>
+                    <th>Status Sesi</th>
+                    <th>Aksi Proktor</th>
+                  </tr>
+                </thead>
+                <tbody id="adminAttendanceTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 6: MONITORING REALTIME (WITH FORCE LOGOUT & CLEAR LOGS) -->
+        <div id="tab-monitoring" class="admin-tab-content" style="display: none;">
+          <div class="admin-page-header">
+            <div>
+              <h1 class="admin-page-title">Live Session Monitoring</h1>
+              <p class="admin-page-subtitle">Pantau peserta aktif, hentikan paksa siswa yang melanggar, dan kelola log sesi.</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-sm btn-secondary" onclick="MonitoringManager.renderActiveSessionsTable()">
+                🔄 Refresh Sesi
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="MonitoringManager.clearAllSessions()">
+                🗑️ Bersihkan Semua Log Sesi
+              </button>
+            </div>
+          </div>
+
+          <div class="card" style="padding: 0; overflow: hidden;">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width: 45px;">No</th>
+                    <th>Nama & No. Peserta</th>
+                    <th>Kelas</th>
+                    <th>Mata Pelajaran</th>
+                    <th>Perangkat</th>
+                    <th>Waktu Masuk</th>
+                    <th>Batas Waktu</th>
+                    <th>Pelanggaran</th>
+                    <th>Status</th>
+                    <th>Aksi Pengawas</th>
+                  </tr>
+                </thead>
+                <tbody id="activeSessionsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 7: LOG PELANGGARAN SISWA (WITH DATE & NAME FILTERS AND CLEAR LOGS) -->
+        <div id="tab-violations" class="admin-tab-content" style="display: none;">
+          <div class="admin-page-header">
+            <div>
+              <h1 class="admin-page-title">Log Pelanggaran Siswa</h1>
+              <p class="admin-page-subtitle">Catatan otomatis tab-switch, kehilangan fokus, dan alarm sirine keamanan.</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-sm btn-secondary" onclick="MonitoringManager.renderViolationsTable()">
+                🔄 Refresh Log
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="MonitoringManager.clearAllViolations()">
+                🗑️ Bersihkan Semua Log Pelanggaran
+              </button>
+            </div>
+          </div>
+
+          <!-- Violation Filter Bar -->
+          <div class="card" style="margin-bottom: 1.25rem; padding: 1rem 1.25rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">📅 Tanggal:</label>
+              <input type="date" id="violationDateFilter" class="form-input" style="max-width: 170px;" onchange="MonitoringManager.renderViolationsTable()">
+            </div>
+            <input type="text" id="violationSearchInput" class="form-input" style="max-width: 240px;" placeholder="🔍 Cari nama siswa / no peserta..." oninput="MonitoringManager.renderViolationsTable()">
+            <select id="violationSeverityFilter" class="form-select" style="max-width: 180px;" onchange="MonitoringManager.renderViolationsTable()">
+              <option value="">Semua Tingkat Bahaya</option>
+              <option value="CRITICAL">🚨 Kritis (Sirine & Red Strobe)</option>
+              <option value="FINAL WARNING">⚠️ Peringatan Terakhir</option>
+              <option value="WARNING">⚠️ Peringatan Ringan</option>
+              <option value="INFO">ℹ️ Informasi / Split View</option>
+            </select>
+            <button class="btn btn-sm btn-secondary" onclick="MonitoringManager.resetViolationFilters()">
+              Reset Filter
+            </button>
+          </div>
+
+          <div class="card" style="padding: 0; overflow: hidden;">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width: 45px;">No</th>
+                    <th>Tanggal & Waktu (WITA)</th>
+                    <th>Nama & No. Peserta</th>
+                    <th>Kelas</th>
+                    <th>Jenis Pelanggaran</th>
+                    <th>Tingkat Bahaya</th>
+                    <th>Detail Kejadian</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="violationsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 8: PENGATURAN PORTAL -->
+        <div id="tab-settings" class="admin-tab-content" style="display: none;">
+          <div class="admin-page-header">
+            <div>
+              <h1 class="admin-page-title">Pengaturan Portal & Tahun Ajaran</h1>
+              <p class="admin-page-subtitle">Atur Tahun Pelajaran, Semester, dan Saklar Menu Khusus (Susulan/Remedial).</p>
+            </div>
+          </div>
+
+          <div class="card" style="max-width: 680px;">
+            <form id="settingsForm" onsubmit="event.preventDefault(); AdminController.saveSettingsForm();">
+              <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--primary-800);">1. Pengaturan Tahun Akademik</h3>
+              
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                <div class="form-group">
+                  <label class="form-label" for="settingAcademicYear">Tahun Pelajaran</label>
+                  <input type="text" id="settingAcademicYear" class="form-input" placeholder="Contoh: 2025/2026" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="settingSemester">Semester</label>
+                  <select id="settingSemester" class="form-select">
+                    <option value="Ganjil">Ganjil</option>
+                    <option value="Genap">Genap</option>
+                  </select>
+                </div>
+              </div>
+
+              <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--primary-800);">2. Saklar Menu Kategori Khusus</h3>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                Menu ini akan muncul pada pemilihan kategori ujian siswa di portal hanya jika diaktifkan.
+              </p>
+
+              <div style="display:flex; flex-direction:column; gap: 0.75rem; margin-bottom: 2rem;">
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                  <input type="checkbox" id="toggleMenuSusulan" style="width: 18px; height: 18px;">
+                  <span style="font-size: 0.925rem; font-weight: 600;">Aktifkan Menu Ujian Susulan</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                  <input type="checkbox" id="toggleMenuRemedial" style="width: 18px; height: 18px;">
+                  <span style="font-size: 0.925rem; font-weight: 600;">Aktifkan Menu Remedial</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                  <input type="checkbox" id="toggleMenuTryout" style="width: 18px; height: 18px;">
+                  <span style="font-size: 0.925rem; font-weight: 600;">Aktifkan Menu Try Out</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                  <input type="checkbox" id="toggleMenuKhusus" style="width: 18px; height: 18px;">
+                  <span style="font-size: 0.925rem; font-weight: 600;">Aktifkan Menu Ujian Khusus</span>
+                </label>
+              </div>
+
+              <div class="form-group" style="background: var(--bg-surface-muted); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.5rem;">
+                <label class="form-label" for="settingDefaultMaxViolations" style="font-weight: 700; color: var(--primary-800);">
+                  🛡️ Batas Toleransi Pelanggaran Bawaan (Default Max Violations)
+                </label>
+                <div style="display:flex; align-items:center; gap: 0.75rem; margin-top: 0.35rem;">
+                  <input type="number" id="settingDefaultMaxViolations" class="form-input" value="3" min="1" max="10" style="max-width: 110px; font-weight: 700;">
+                  <span style="font-size:0.85rem; color:var(--text-muted);">
+                    kali pelanggaran sebelum siswa otomatis terkunci & dikeluarkan dari ujian.
+                  </span>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="margin-bottom: 2rem;">SIMPAN PERUBAHAN PENGATURAN</button>
+            </form>
+
+            <hr style="border: 0; border-top: 1px solid var(--border-medium); margin: 2rem 0;">
+
+            <!-- Ganti Akun & Kata Sandi Proktor -->
+            <form id="adminAccountForm" onsubmit="event.preventDefault(); AdminController.saveAdminAccount();">
+              <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--primary-800);">3. Keamanan Akun Proktor / Admin</h3>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                Ganti Email login, Nama Proktor, dan Kata Sandi untuk masuk ke Dashboard Admin.
+              </p>
+
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div class="form-group">
+                  <label class="form-label" for="settingAdminEmail">Email Login Proktor</label>
+                  <input type="email" id="settingAdminEmail" class="form-input" placeholder="proktor@man3hss.sch.id" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="settingAdminName">Nama Lengkap Proktor</label>
+                  <input type="text" id="settingAdminName" class="form-input" placeholder="Proktor Madrasah" required>
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                <div class="form-group">
+                  <label class="form-label" for="settingAdminNewPass">Kata Sandi Baru</label>
+                  <input type="password" id="settingAdminNewPass" class="form-input" placeholder="Minimal 6 karakter">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="settingAdminConfirmPass">Konfirmasi Sandi Baru</label>
+                  <input type="password" id="settingAdminConfirmPass" class="form-input" placeholder="Ketik ulang sandi">
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-secondary">
+                🔐 SIMPAN PERUBAHAN AKUN & KATA SANDI
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL: Tambah/Edit Jadwal Ujian -->
+  <div id="examFormModal" class="modal-backdrop">
+    <div class="modal-container" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="examFormModalTitle">Tambah Jadwal Ujian</h3>
+        <button class="modal-close" onclick="AdminController.closeExamFormModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="examFormId">
+
+        <div class="form-group">
+          <label class="form-label">Judul Ujian Lengkap</label>
+          <input type="text" id="examFormTitle" class="form-input" placeholder="Contoh: Asesmen Sumatif Akhir Semester - Matematika" required>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Mata Pelajaran</label>
+            <input type="text" id="examFormSubject" class="form-input" placeholder="Matematika / Biologi / dll" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Kategori / Tipe Ujian</label>
+            <select id="examFormTypeSelect" class="form-select">
+              <option value="Ujian Utama">Ujian Utama</option>
+              <option value="Ujian Susulan">Ujian Susulan</option>
+              <option value="Remedial">Remedial</option>
+              <option value="Try Out">Try Out</option>
+              <option value="Khusus">Khusus</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tautan Google Forms (URL)</label>
+          <input type="url" id="examFormUrl" class="form-input" placeholder="https://docs.google.com/forms/d/e/.../viewform" required>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: var(--bg-surface-muted); padding: 0.85rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
+          <div class="form-group" style="margin-bottom:0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+              <label class="form-label" style="color:var(--primary-800); margin:0;">🔑 Token Masuk</label>
+              <button type="button" class="btn btn-sm btn-outline" onclick="AdminController.generateRandomTokenMasuk()" title="Acak Token Masuk Baru" style="padding:0.15rem 0.5rem; font-size:0.75rem; font-weight:700;">
+                🎲 Acak Token
+              </button>
+            </div>
+            <input type="text" id="examFormTokenMasuk" class="form-input" placeholder="Contoh: MATH2026" style="font-family:var(--font-mono); font-weight:700; text-transform:uppercase;" required>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+              <label class="form-label" style="color:var(--danger); margin:0;">🚪 Token Keluar</label>
+              <button type="button" class="btn btn-sm btn-outline" onclick="AdminController.generateRandomTokenKeluar()" title="Acak Token Keluar Baru" style="padding:0.15rem 0.5rem; font-size:0.75rem; font-weight:700;">
+                🎲 Acak Token
+              </button>
+            </div>
+            <input type="text" id="examFormTokenKeluar" class="form-input" placeholder="Contoh: SELESAI" value="SELESAI" style="font-family:var(--font-mono); font-weight:700; text-transform:uppercase;" required>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+          <div class="form-group">
+            <label class="form-label">Durasi (Menit)</label>
+            <input type="number" id="examFormDuration" class="form-input" value="90" min="15" max="300">
+          </div>
+          <div class="form-group">
+            <label class="form-label" title="Toleransi maksimal pelanggaran sebelum siswa dikeluarkan">Batas Pelanggaran</label>
+            <input type="number" id="examFormMaxViolations" class="form-input" value="3" min="1" max="10" placeholder="Contoh: 3">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status Awal</label>
+            <select id="examFormStatusSelect" class="form-select">
+              <option value="active">🟢 Aktif (Tampil)</option>
+              <option value="inactive">🔴 Nonaktif (Sembunyi)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Jadwal Mulai (WITA)</label>
+            <input type="datetime-local" id="examFormStart" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Jadwal Selesai (WITA)</label>
+            <input type="datetime-local" id="examFormEnd" class="form-input" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Pilih Kelas Peserta (Khusus Ujian Utama)</label>
+          <div id="examClassesCheckboxes" style="padding:0.75rem; border:1px solid var(--border-medium); border-radius:var(--radius-md); max-height:120px; overflow-y:auto;">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Deskripsi / Petunjuk Tambahan</label>
+          <textarea id="examFormDesc" class="form-textarea" rows="2" placeholder="Petunjuk pengerjaan bagi siswa..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="AdminController.closeExamFormModal()">Batal</button>
+        <button class="btn btn-primary" onclick="AdminController.saveExamForm()">SIMPAN JADWAL UJIAN</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Tambah/Edit Kelas -->
+  <div id="classFormModal" class="modal-backdrop">
+    <div class="modal-container" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="classModalTitle">Tambah Kelas Baru</h3>
+        <button class="modal-close" onclick="AdminController.closeClassFormModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="classFormId">
+        <div class="form-group">
+          <label class="form-label">Nama Kelas / Rombel</label>
+          <input type="text" id="classNameInput" class="form-input" placeholder="Contoh: XII IPA 3" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Jenjang Tingkat</label>
+          <select id="classGradeSelect" class="form-select">
+            <option value="X">Tingkat X (Sepuluh)</option>
+            <option value="XI">Tingkat XI (Sebelas)</option>
+            <option value="XII">Tingkat XII (Dua Belas)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Keterangan</label>
+          <input type="text" id="classDescInput" class="form-input" placeholder="Peminatan IPA / IPS / Agama">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="AdminController.closeClassFormModal()">Batal</button>
+        <button class="btn btn-primary" onclick="AdminController.saveClassForm()">SIMPAN KELAS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Tambah/Edit Siswa -->
+  <div id="studentFormModal" class="modal-backdrop">
+    <div class="modal-container" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="studentModalTitle">Tambah Siswa Baru</h3>
+        <button class="modal-close" onclick="AdminController.closeStudentModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="studentFormId">
+        <div class="form-group">
+          <label class="form-label">Nomor Peserta Ujian</label>
+          <input type="text" id="studentNumberInput" class="form-input" placeholder="Contoh: 24-10-001" style="font-family:var(--font-mono); font-weight:700;" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nama Lengkap Siswa</label>
+          <input type="text" id="studentFullNameInput" class="form-input" placeholder="Nama lengkap siswa..." required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pilih Kelas / Rombel</label>
+          <select id="studentClassSelectModal" class="form-select" required>
+            <option value="">-- Pilih Kelas --</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="AdminController.closeStudentModal()">Batal</button>
+        <button class="btn btn-primary" onclick="AdminController.saveStudentForm()">SIMPAN DATA SISWA</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Impor File Excel (.xlsx / .csv) -->
+  <div id="importStudentsModal" class="modal-backdrop">
+    <div class="modal-container" style="max-width: 580px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Impor Data Siswa dari File Excel (.xlsx)</h3>
+        <button class="modal-close" onclick="AdminController.closeImportStudentsModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: var(--bg-surface-muted); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
+          <div style="font-weight: 700; font-size: 0.9rem; color: var(--primary-800); margin-bottom: 0.25rem;">📄 Petunjuk Format Kolom Excel:</div>
+          <p style="font-size: 0.825rem; color: var(--text-muted); margin: 0; line-height: 1.5;">
+            File Excel harus memiliki 3 kolom header di baris pertama:<br>
+            <strong><code>NO_PESERTA</code></strong> | <strong><code>NAMA_SISWA</code></strong> | <strong><code>KELAS</code></strong>
+          </p>
+          <button class="btn btn-sm btn-outline" style="margin-top: 0.75rem;" onclick="AdminController.downloadStudentExcelTemplate()">
+            📥 Download Contoh Template Excel (.xlsx)
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Pilih File Excel (.xlsx / .xls / .csv)</label>
+          <div class="excel-dropzone" onclick="document.getElementById('excelFileInput').click()">
+            <div style="font-size: 2.25rem; margin-bottom: 0.5rem;">📊</div>
+            <div style="font-weight: 700; font-size: 0.95rem; color: var(--primary-800);">Klik untuk Memilih File Excel</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Mendukung format .xlsx, .xls, dan .csv</div>
+            <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" style="display: none;" onchange="AdminController.handleExcelFileSelected(event)">
+          </div>
+        </div>
+
+        <div id="excelPreviewContainer" style="display: none; margin-top: 1rem;">
+          <div style="font-weight: 700; font-size: 0.85rem; color: var(--text-main); margin-bottom: 0.5rem;" id="excelPreviewTitle">
+            Pratinjau Data (0 Siswa Terbaca):
+          </div>
+          <div style="max-height: 160px; overflow-y: auto; border: 1px solid var(--border-medium); border-radius: var(--radius-md);">
+            <table class="data-table" style="font-size: 0.8rem;">
+              <thead>
+                <tr>
+                  <th>No Peserta</th>
+                  <th>Nama Siswa</th>
+                  <th>Kelas</th>
+                </tr>
+              </thead>
+              <tbody id="excelPreviewTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="AdminController.closeImportStudentsModal()">Batal</button>
+        <button id="btnConfirmImportExcel" class="btn btn-primary" disabled onclick="AdminController.commitImportExcel()">
+          IMPOR KE DATABASE
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/storage.js"></script>
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-client.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/monitoring.js"></script>
+  <script src="js/admin.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      AdminController.init();
+    });
+  </script>
+
+</body>
+</html>
