@@ -151,8 +151,16 @@ class FirebaseService {
      CLASSES
   ============================================================ */
   async getClasses() {
-    if (!this.isLive) return StorageManager.get('db_classes', []);
-    return await this._getAllDocs('classes');
+    let classes;
+    if (!this.isLive) {
+      classes = StorageManager.get('db_classes', []);
+    } else {
+      classes = await this._getAllDocs('classes');
+    }
+    classes.sort((a, b) =>
+      (a.name || '').localeCompare(b.name || '', 'id', { numeric: true, sensitivity: 'base' })
+    );
+    return classes;
   }
 
   async saveClass(classData) {
@@ -193,7 +201,7 @@ class FirebaseService {
         const gradeClassIds = classes.filter(c => c.grade === grade).map(c => c.id);
         students = students.filter(s => gradeClassIds.includes(s.class_id));
       }
-      students.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
+      students.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || '', 'id', { numeric: true, sensitivity: 'base' }));
       return students;
     }
 
@@ -210,7 +218,7 @@ class FirebaseService {
       students = students.filter(s => gradeClassIds.includes(s.class_id));
     }
 
-    students.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
+    students.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || '', 'id', { numeric: true, sensitivity: 'base' }));
     return students;
   }
 
