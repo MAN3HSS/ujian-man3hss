@@ -363,6 +363,8 @@ const ExamsManager = {
     if (errEl) errEl.style.display = 'none';
 
     modal.classList.add('active');
+    const container = modal.querySelector('.modal-container');
+    if (container) container.scrollTop = 0;
 
     // Jika sudah datang lewat link (?ujian=ID), langsung cari ujiannya.
     if (prefillExamId) {
@@ -377,20 +379,54 @@ const ExamsManager = {
   },
 
   /**
-   * Ambil kode/ID ujian dari teks yang di-scan atau ditempel. Menerima baik
-   * link lengkap (https://.../index.html?ujian=XXXX) maupun kode/ID polos.
+   * Ambil kode/ID ujian dari teks yang di-scan atau ditempel. Menerima:
+   * 1. Link buatan sistem kita sendiri (index.html?ujian=ID) — dari fitur Link/QR admin
+   * 2. Link Google Form ASLI (yang sama dengan yang diisi admin di kolom Link Google Form saat bikin ujian)
+   * 3. Kode/ID ujian polos
    */
-  _extractExamIdFromText(text) {
+  _extractGoogleFormId(text) {
+    const match = (text || '').match(/forms\/d\/e\/([a-zA-Z0-9_-]+)/) || (text || '').match(/forms\/d\/([a-zA-Z0-9_-]+)/);
+    return match ? match[1] : null;
+  },
+
+  async _findExamByLinkOrCode(text) {
     const raw = (text || '').trim();
-    if (!raw) return '';
+    if (!raw) return null;
+
+    let exams = [];
+    try {
+      exams = await window.DB.getAllExamsAdmin();
+    } catch (err) {
+      console.warn('_findExamByLinkOrCode lookup failed:', err);
+      return null;
+    }
+
+    // 1. Link buatan sistem sendiri: index.html?ujian=ID
     try {
       const url = new URL(raw);
       const fromQuery = url.searchParams.get('ujian');
-      if (fromQuery) return fromQuery.trim();
-    } catch (e) {
-      // Bukan URL valid, berarti kemungkinan kode/ID polos — lanjut apa adanya.
+      if (fromQuery) {
+        const byId = exams.find(e => e.id === fromQuery.trim());
+        if (byId) return byId;
+      }
+    } catch (e) { /* bukan URL absolut, lanjut cara lain */ }
+
+    // 2. Link Google Form asli — cocokkan ID unik Google Form-nya
+    const scannedFormId = this._extractGoogleFormId(raw);
+    if (scannedFormId) {
+      const byFormId = exams.find(e => this._extractGoogleFormId(e.form_url || '') === scannedFormId);
+      if (byFormId) return byFormId;
     }
-    return raw;
+
+    // 3. Cocokkan persis dengan Link Google Form yang tersimpan di ujian (fallback)
+    const byExactUrl = exams.find(e => (e.form_url || '').trim() === raw);
+    if (byExactUrl) return byExactUrl;
+
+    // 4. Kode/ID ujian polos
+    const byId = exams.find(e => e.id === raw);
+    if (byId) return byId;
+
+    return null;
   },
 
   async startBarcodeScanner() {
@@ -433,37 +469,54 @@ const ExamsManager = {
   },
 
   stopBarcodeScanner() {
+    const container = document.getElementById('directLinkScannerContainer');
+
+    // Reset tampilan SEKARANG JUGA (tidak menunggu promise library selesai),
+    // supaya modal selalu bisa langsung tertutup meski proses stop kamera
+    // di baliknya lambat/gagal.
+    if (container) { container.style.display = 'none'; }
+
     if (this._qrScanner) {
-      this._qrScanner.stop().catch(() => {}).finally(() => {
-        this._qrScanner = null;
-        const container = document.getElementById('directLinkScannerContainer');
-        if (container) { container.style.display = 'none'; container.innerHTML = ''; }
-      });
+      const scannerToStop = this._qrScanner;
+      this._qrScanner = null;
+      try {
+        scannerToStop.stop()
+          .then(() => scannerToStop.clear())
+          .catch(() => {})
+          .finally(() => { if (container) container.innerHTML = ''; });
+      } catch (e) {
+        if (container) container.innerHTML = '';
+      }
     }
+
+    // Jaring pengaman tambahan: paksa hentikan SEMUA stream kamera aktif
+    // di halaman ini, kalau-kalau library gagal melepaskannya sendiri.
+    try {
+      document.querySelectorAll('#directLinkScannerContainer video').forEach(video => {
+        const stream = video.srcObject;
+        if (stream && stream.getTracks) {
+          stream.getTracks().forEach(track => track.stop());
+        }
+      });
+    } catch (e) { /* abaikan */ }
   },
 
   async resolveDirectLink() {
     const urlInput = document.getElementById('directLinkUrlInput');
     const errEl = document.getElementById('directLinkErrorMsg');
-    const examId = this._extractExamIdFromText(urlInput ? urlInput.value : '');
+    const inputText = urlInput ? urlInput.value.trim() : '';
 
     if (errEl) errEl.style.display = 'none';
 
-    if (!examId) {
-      if (errEl) { errEl.textContent = 'Harap scan barcode atau tempel link/kode ujian terlebih dahulu.'; errEl.style.display = 'block'; }
+    if (!inputText) {
+      if (errEl) { errEl.textContent = 'Harap scan barcode atau tempel link ujian (Google Form) terlebih dahulu.'; errEl.style.display = 'block'; }
       return;
     }
 
-    let exam = null;
-    try {
-      const exams = await window.DB.getAllExamsAdmin();
-      exam = exams.find(e => e.id === examId);
-    } catch (err) {
-      console.warn('resolveDirectLink lookup failed:', err);
-    }
+    const exam = await this._findExamByLinkOrCode(inputText);
 
     if (!exam || exam.status !== 'active') {
-      if (errEl) { errEl.textContent = 'Ujian tidak ditemukan atau sedang tidak aktif. Periksa kembali link/kode-nya.'; errEl.style.display = 'block'; }
+      if (errEl) { errEl.textContent = 'Ujian tidak ditemukan untuk link tersebut, atau sedang tidak aktif. Periksa kembali link/barcode-nya.'; errEl.style.display = 'block'; }
       return;
     }
 
