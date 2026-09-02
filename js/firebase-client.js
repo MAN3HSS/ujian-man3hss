@@ -69,7 +69,8 @@ class FirebaseService {
         menu_susulan_enabled: true,
         menu_remedial_enabled: true,
         menu_tryout_enabled: false,
-        menu_khusus_enabled: false
+        menu_khusus_enabled: false,
+        default_exit_token: 'SELESAI'
       });
     }
 
@@ -117,7 +118,8 @@ class FirebaseService {
         menu_susulan_enabled: true,
         menu_remedial_enabled: true,
         menu_tryout_enabled: false,
-        menu_khusus_enabled: false
+        menu_khusus_enabled: false,
+        default_exit_token: 'SELESAI'
       };
       await ref.set(defaults);
       return defaults;
@@ -354,6 +356,47 @@ class FirebaseService {
      SESSION & TOKEN VERIFICATION
   ============================================================ */
   async verifyTokenAndStartSession(examId, tokenInput, studentName, classId, className, studentNumber = '') {
+    const preCheck = await this._preSessionCheck(examId, studentName, studentNumber);
+    if (!preCheck.success) return preCheck;
+    const exam = preCheck.exam;
+
+    const cleanInput = (tokenInput || '').trim().toUpperCase();
+    const cleanPlain = (exam.token_masuk_plain || '').trim().toUpperCase();
+    const inputHash = await Utils.sha256(cleanInput);
+
+    const isTokenValid = (cleanPlain && cleanInput === cleanPlain) ||
+                         (exam.token_hash && inputHash === exam.token_hash);
+
+    if (!isTokenValid) {
+      return {
+        success: false,
+        message: `Token Masuk '${tokenInput}' salah. Minta token kepada pengawas ruang.`,
+        code: 'INVALID_TOKEN'
+      };
+    }
+
+    return await this._createSession(exam, studentName, classId, className, studentNumber);
+  }
+
+  /**
+   * Mulai sesi ujian TANPA Token Masuk — dipakai untuk akses via Scan
+   * Barcode / Link Ujian langsung. Token Keluar tetap dibutuhkan saat
+   * selesai, memakai Token Keluar milik ujian ini jika diisi, atau
+   * Token Keluar Default dari Pengaturan Portal jika tidak diisi.
+   */
+  async startSessionByDirectLink(examId, studentName, classId, className, studentNumber = '') {
+    const preCheck = await this._preSessionCheck(examId, studentName, studentNumber);
+    if (!preCheck.success) return preCheck;
+    return await this._createSession(preCheck.exam, studentName, classId, className, studentNumber, true);
+  }
+
+  /**
+   * Validasi bersama: jeda darurat, ujian ditemukan/aktif, jadwal, dan
+   * kunci sesi ganda (siswa yang sudah selesai/dikeluarkan tidak bisa
+   * masuk lagi). Dipakai oleh verifyTokenAndStartSession &
+   * startSessionByDirectLink supaya aturan konsisten di kedua jalur masuk.
+   */
+  async _preSessionCheck(examId, studentName, studentNumber) {
     const isPaused = await this.isGlobalExamPaused();
     if (isPaused) {
       return {
@@ -399,27 +442,31 @@ class FirebaseService {
       };
     }
 
-    const cleanInput = (tokenInput || '').trim().toUpperCase();
-    const cleanPlain = (exam.token_masuk_plain || '').trim().toUpperCase();
-    const inputHash = await Utils.sha256(cleanInput);
+    return { success: true, exam };
+  }
 
-    const isTokenValid = (cleanPlain && cleanInput === cleanPlain) ||
-                         (exam.token_hash && inputHash === exam.token_hash);
-
-    if (!isTokenValid) {
-      return {
-        success: false,
-        message: `Token Masuk '${tokenInput}' salah. Minta token kepada pengawas ruang.`,
-        code: 'INVALID_TOKEN'
-      };
-    }
-
+  /**
+   * Buat dokumen sesi baru & kembalikan payload untuk memulai ExamActivity.
+   * viaDirectLink=true berarti token masuk dilewati (dipakai fitur Scan
+   * Barcode / Link Ujian) dan token keluar memakai default dari Pengaturan
+   * jika ujian ini tidak punya token keluar sendiri.
+   */
+  async _createSession(exam, studentName, classId, className, studentNumber, viaDirectLink = false) {
+    const now = new Date();
     const devInfo = Utils.getDeviceInfo();
     const sessionToken = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const expiresAt = new Date(Math.min(
       now.getTime() + exam.duration_minutes * 60000,
       new Date(exam.end_at).getTime()
     )).toISOString();
+
+    let tokenKeluarPlain = exam.token_keluar_plain || '';
+    let tokenKeluarHash = exam.token_keluar_hash || null;
+    if (viaDirectLink && !tokenKeluarPlain && !tokenKeluarHash) {
+      const settings = await this.getSettings();
+      tokenKeluarPlain = settings.default_exit_token || 'SELESAI';
+    }
+    if (!tokenKeluarPlain && !tokenKeluarHash) tokenKeluarPlain = 'SELESAI';
 
     const newSession = {
       exam_id: exam.id,
@@ -429,8 +476,9 @@ class FirebaseService {
       student_name: studentName || 'Peserta Ujian',
       student_number: studentNumber || '-',
       session_identifier: sessionToken,
-      token_keluar_plain: exam.token_keluar_plain || 'SELESAI',
-      token_keluar_hash: exam.token_keluar_hash || null,
+      entry_method: viaDirectLink ? 'direct_link' : 'token',
+      token_keluar_plain: tokenKeluarPlain,
+      token_keluar_hash: tokenKeluarHash,
       device_type: devInfo.deviceType,
       browser: devInfo.browser,
       started_at: now.toISOString(),
