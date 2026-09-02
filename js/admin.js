@@ -178,9 +178,10 @@ const AdminController = {
           </button>
         </td>
         <td>
-          <div style="display:flex; gap: 0.35rem;">
+          <div style="display:flex; gap: 0.35rem; flex-wrap: wrap;">
             <button class="btn btn-sm btn-secondary" onclick="AdminController.openEditExamModal('${exam.id}')" title="Edit Ujian">Edit</button>
             <button class="btn btn-sm btn-secondary" onclick="AdminController.duplicateExam('${exam.id}')" title="Duplikasi">Salin</button>
+            <button class="btn btn-sm btn-accent" onclick="AdminController.openExamLinkModal('${exam.id}')" title="Link & QR untuk Scan Barcode / Link Ujian">🔗 Link/QR</button>
             <button class="btn btn-sm btn-danger" onclick="AdminController.deleteExam('${exam.id}')" title="Hapus">Hapus</button>
           </div>
         </td>
@@ -1083,6 +1084,9 @@ const AdminController = {
     const defMaxEl = document.getElementById('settingDefaultMaxViolations');
     if (defMaxEl) defMaxEl.value = settings.default_max_violations || 3;
 
+    const defExitEl = document.getElementById('settingDefaultExitToken');
+    if (defExitEl) defExitEl.value = settings.default_exit_token || 'SELESAI';
+
     // Load current admin credentials
     if (window.AuthManager) {
       const creds = AuthManager.getAdminCredentials();
@@ -1105,6 +1109,7 @@ const AdminController = {
     const menuTryout = document.getElementById('toggleMenuTryout').checked;
     const menuKhusus = document.getElementById('toggleMenuKhusus').checked;
     const defaultMaxViolations = parseInt(document.getElementById('settingDefaultMaxViolations')?.value, 10) || 3;
+    const defaultExitToken = (document.getElementById('settingDefaultExitToken')?.value || 'SELESAI').trim().toUpperCase();
 
     await window.DB.saveSettings({
       academic_year: academicYear,
@@ -1113,7 +1118,8 @@ const AdminController = {
       menu_remedial_enabled: menuRemedial,
       menu_tryout_enabled: menuTryout,
       menu_khusus_enabled: menuKhusus,
-      default_max_violations: defaultMaxViolations
+      default_max_violations: defaultMaxViolations,
+      default_exit_token: defaultExitToken
     });
 
     Utils.showToast('Berhasil', 'Pengaturan portal dan batas pelanggaran berhasil diperbarui!', 'success');
@@ -1150,6 +1156,74 @@ const AdminController = {
     const confEl = document.getElementById('settingAdminConfirmPass');
     if (passEl) passEl.value = '';
     if (confEl) confEl.value = '';
+  },
+
+  /* --------------------------------------------------------------------------
+     EXAM DIRECT LINK & QR CODE (Scan Barcode / Link Ujian, tanpa Token Masuk)
+  -------------------------------------------------------------------------- */
+  async openExamLinkModal(examId) {
+    const exams = await window.DB.getAllExamsAdmin();
+    const exam = exams.find(e => e.id === examId);
+    if (!exam) return;
+
+    const link = `${window.location.origin}${window.location.pathname.replace(/admin\.html$/, '')}index.html?ujian=${examId}`;
+
+    let modal = document.getElementById('examLinkModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'examLinkModal';
+      modal.className = 'modal-backdrop';
+      modal.innerHTML = `
+        <div class="modal-content" style="max-width: 420px;">
+          <div class="modal-header">
+            <h3>🔗 Link & QR Ujian</h3>
+            <button class="modal-close" onclick="AdminController.closeExamLinkModal()">&times;</button>
+          </div>
+          <div class="modal-body" style="text-align:center;">
+            <p style="font-weight:700; margin-bottom: 0.25rem;" id="examLinkTitle"></p>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
+              Siswa yang men-scan QR ini atau membuka link ini akan langsung masuk ke menu ujian TANPA Token Masuk (hanya perlu Token Keluar saat selesai).
+            </p>
+            <div id="examLinkQrContainer" style="display:flex; justify-content:center; margin-bottom:1rem;"></div>
+            <div class="form-group">
+              <input type="text" id="examLinkUrlInput" class="form-input" readonly style="text-align:center; font-size:0.8rem;">
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="AdminController.copyExamLink()">📋 Salin Link</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    document.getElementById('examLinkTitle').textContent = `${exam.subject} — ${exam.title}`;
+    document.getElementById('examLinkUrlInput').value = link;
+
+    const qrContainer = document.getElementById('examLinkQrContainer');
+    qrContainer.innerHTML = '';
+    if (window.QRCode) {
+      new QRCode(qrContainer, { text: link, width: 200, height: 200 });
+    } else {
+      qrContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Pustaka QR gagal dimuat. Salin link secara manual.</p>';
+    }
+
+    modal.classList.add('active');
+  },
+
+  closeExamLinkModal() {
+    const modal = document.getElementById('examLinkModal');
+    if (modal) modal.classList.remove('active');
+  },
+
+  copyExamLink() {
+    const input = document.getElementById('examLinkUrlInput');
+    if (!input) return;
+    input.select();
+    navigator.clipboard?.writeText(input.value).then(() => {
+      Utils.showToast('Tersalin', 'Link ujian berhasil disalin ke clipboard.', 'success');
+    }).catch(() => {
+      document.execCommand('copy');
+      Utils.showToast('Tersalin', 'Link ujian berhasil disalin.', 'success');
+    });
   }
 };
 
