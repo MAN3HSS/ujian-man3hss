@@ -513,10 +513,37 @@ const ExamsManager = {
       return;
     }
 
-    const exam = await this._findExamByLinkOrCode(inputText);
+    const findBtn = document.getElementById('btnFindDirectLink');
+    if (findBtn) { findBtn.disabled = true; findBtn.textContent = 'Mencari...'; }
 
-    if (!exam || exam.status !== 'active') {
-      if (errEl) { errEl.textContent = 'Ujian tidak ditemukan untuk link tersebut, atau sedang tidak aktif. Periksa kembali link/barcode-nya.'; errEl.style.display = 'block'; }
+    let exam = await this._findExamByLinkOrCode(inputText);
+
+    if (!exam) {
+      // Link belum terdaftar sebagai ujian. Kalau memang terlihat seperti
+      // link Google Form yang valid, langsung buat ujian baru otomatis
+      // (tanpa perlu isi apapun) supaya bisa langsung dipakai.
+      const looksLikeGoogleForm = this._extractGoogleFormId(inputText) || /^https?:\/\//i.test(inputText);
+      if (!looksLikeGoogleForm) {
+        if (findBtn) { findBtn.disabled = false; findBtn.textContent = 'Cari Ujian'; }
+        if (errEl) { errEl.textContent = 'Link/kode tidak dikenali. Pastikan itu link Google Form yang valid.'; errEl.style.display = 'block'; }
+        return;
+      }
+
+      try {
+        exam = await window.DB.createExamFromLink(inputText);
+        Utils.showToast('Ujian Baru Dibuat', 'Link ini belum terdaftar, ujian baru otomatis dibuat & langsung aktif.', 'success');
+      } catch (err) {
+        console.error('Auto-create exam from link failed:', err);
+        if (findBtn) { findBtn.disabled = false; findBtn.textContent = 'Cari Ujian'; }
+        if (errEl) { errEl.textContent = `Gagal membuat ujian otomatis: ${err.message || 'Terjadi kesalahan'}`; errEl.style.display = 'block'; }
+        return;
+      }
+    }
+
+    if (findBtn) { findBtn.disabled = false; findBtn.textContent = 'Cari Ujian'; }
+
+    if (exam.status !== 'active') {
+      if (errEl) { errEl.textContent = 'Ujian ditemukan, tapi sedang DINONAKTIFKAN oleh proktor.'; errEl.style.display = 'block'; }
       return;
     }
 
@@ -539,6 +566,7 @@ const ExamsManager = {
       classSelect.innerHTML += `<option value="${c.id}" data-name="${c.name}">${c.name}</option>`;
     });
   },
+
 
   async onDirectClassChange() {
     const classSelect = document.getElementById('directClassSelect');
