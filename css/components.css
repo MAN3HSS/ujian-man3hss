@@ -491,3 +491,18 @@
 .status-ok { color: var(--success); }
 .status-warning { color: var(--warning); }
 .status-fail { color: var(--danger); }
+
+/* Scan Barcode/QR modal: batasi tinggi video kamera supaya tidak mendorong
+   tombol Tutup keluar layar (terutama di HP) */
+#directLinkScannerContainer,
+#directLinkQrReader {
+  max-height: 320px;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+}
+#directLinkQrReader video {
+  max-height: 320px !important;
+  width: 100% !important;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
