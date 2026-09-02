@@ -342,6 +342,248 @@ const ExamsManager = {
     }
   },
 
+  /* --------------------------------------------------------------------------
+     SCAN BARCODE / LINK UJIAN (Tanpa Token Masuk)
+  -------------------------------------------------------------------------- */
+  directLinkExam: null,
+  _qrScanner: null,
+
+  openDirectLinkModal(prefillExamId) {
+    const modal = document.getElementById('directLinkModal');
+    if (!modal) return;
+
+    this.directLinkExam = null;
+    document.getElementById('directLinkStepFind').style.display = 'block';
+    document.getElementById('directLinkStepIdentity').style.display = 'none';
+    document.getElementById('btnStartDirectSession').style.display = 'none';
+
+    const urlInput = document.getElementById('directLinkUrlInput');
+    if (urlInput) urlInput.value = prefillExamId || '';
+    const errEl = document.getElementById('directLinkErrorMsg');
+    if (errEl) errEl.style.display = 'none';
+
+    modal.classList.add('active');
+
+    // Jika sudah datang lewat link (?ujian=ID), langsung cari ujiannya.
+    if (prefillExamId) {
+      this.resolveDirectLink();
+    }
+  },
+
+  closeDirectLinkModal() {
+    this.stopBarcodeScanner();
+    const modal = document.getElementById('directLinkModal');
+    if (modal) modal.classList.remove('active');
+  },
+
+  /**
+   * Ambil kode/ID ujian dari teks yang di-scan atau ditempel. Menerima baik
+   * link lengkap (https://.../index.html?ujian=XXXX) maupun kode/ID polos.
+   */
+  _extractExamIdFromText(text) {
+    const raw = (text || '').trim();
+    if (!raw) return '';
+    try {
+      const url = new URL(raw);
+      const fromQuery = url.searchParams.get('ujian');
+      if (fromQuery) return fromQuery.trim();
+    } catch (e) {
+      // Bukan URL valid, berarti kemungkinan kode/ID polos — lanjut apa adanya.
+    }
+    return raw;
+  },
+
+  async startBarcodeScanner() {
+    const container = document.getElementById('directLinkScannerContainer');
+    if (!container) return;
+
+    if (!window.Html5Qrcode) {
+      Utils.showToast('Gagal', 'Pustaka pemindai kamera gagal dimuat. Pastikan koneksi internet aktif.', 'error');
+      return;
+    }
+
+    container.style.display = 'block';
+    container.innerHTML = '<div id="directLinkQrReader" style="width:100%;"></div>';
+
+    try {
+      this._qrScanner = new Html5Qrcode('directLinkQrReader');
+      const cameras = await Html5Qrcode.getCameras();
+      if (!cameras || cameras.length === 0) {
+        Utils.showToast('Kamera Tidak Ditemukan', 'Tidak ada kamera yang terdeteksi di perangkat ini.', 'error');
+        return;
+      }
+      // Prioritaskan kamera belakang jika ada (biasanya lebih jelas untuk scan)
+      const backCam = cameras.find(c => /back|belakang|rear/i.test(c.label)) || cameras[0];
+
+      await this._qrScanner.start(
+        backCam.id,
+        { fps: 10, qrbox: 220 },
+        (decodedText) => {
+          const urlInput = document.getElementById('directLinkUrlInput');
+          if (urlInput) urlInput.value = decodedText;
+          this.stopBarcodeScanner();
+          this.resolveDirectLink();
+        },
+        () => { /* diabaikan: dipanggil terus tiap frame gagal decode */ }
+      );
+    } catch (err) {
+      console.warn('Camera scanner error:', err);
+      Utils.showToast('Gagal Membuka Kamera', 'Pastikan Anda mengizinkan akses kamera di browser.', 'error');
+    }
+  },
+
+  stopBarcodeScanner() {
+    if (this._qrScanner) {
+      this._qrScanner.stop().catch(() => {}).finally(() => {
+        this._qrScanner = null;
+        const container = document.getElementById('directLinkScannerContainer');
+        if (container) { container.style.display = 'none'; container.innerHTML = ''; }
+      });
+    }
+  },
+
+  async resolveDirectLink() {
+    const urlInput = document.getElementById('directLinkUrlInput');
+    const errEl = document.getElementById('directLinkErrorMsg');
+    const examId = this._extractExamIdFromText(urlInput ? urlInput.value : '');
+
+    if (errEl) errEl.style.display = 'none';
+
+    if (!examId) {
+      if (errEl) { errEl.textContent = 'Harap scan barcode atau tempel link/kode ujian terlebih dahulu.'; errEl.style.display = 'block'; }
+      return;
+    }
+
+    let exam = null;
+    try {
+      const exams = await window.DB.getAllExamsAdmin();
+      exam = exams.find(e => e.id === examId);
+    } catch (err) {
+      console.warn('resolveDirectLink lookup failed:', err);
+    }
+
+    if (!exam || exam.status !== 'active') {
+      if (errEl) { errEl.textContent = 'Ujian tidak ditemukan atau sedang tidak aktif. Periksa kembali link/kode-nya.'; errEl.style.display = 'block'; }
+      return;
+    }
+
+    this.directLinkExam = exam;
+
+    document.getElementById('directLinkExamSubject').textContent = exam.subject || '';
+    document.getElementById('directLinkExamTitle').textContent = exam.title || '';
+    document.getElementById('directLinkExamDuration').textContent = `${exam.duration_minutes} Menit`;
+
+    document.getElementById('directLinkStepFind').style.display = 'none';
+    document.getElementById('directLinkStepIdentity').style.display = 'block';
+    document.getElementById('btnStartDirectSession').style.display = 'block';
+
+    // Populate dropdown kelas (semua kelas, tidak difilter jenjang karena
+    // masuk lewat link bisa dari jenjang manapun)
+    const classSelect = document.getElementById('directClassSelect');
+    const classes = await window.DB.getClasses();
+    classSelect.innerHTML = `<option value="">-- Pilih Kelas Anda --</option>`;
+    classes.forEach(c => {
+      classSelect.innerHTML += `<option value="${c.id}" data-name="${c.name}">${c.name}</option>`;
+    });
+  },
+
+  async onDirectClassChange() {
+    const classSelect = document.getElementById('directClassSelect');
+    const studentSelect = document.getElementById('directNameSelect');
+    const badge = document.getElementById('directNumberBadge');
+    if (!classSelect || !studentSelect) return;
+
+    const classId = classSelect.value;
+    if (badge) badge.style.display = 'none';
+
+    if (!classId) {
+      studentSelect.innerHTML = `<option value="">-- Pilih Kelas Terlebih Dahulu --</option>`;
+      return;
+    }
+
+    studentSelect.innerHTML = `<option value="">Memuat nama siswa...</option>`;
+    const students = await window.DB.getStudents(classId);
+
+    if (!students || students.length === 0) {
+      studentSelect.innerHTML = `<option value="">-- Belum ada data siswa di kelas ini --</option>`;
+      return;
+    }
+
+    studentSelect.innerHTML = `<option value="">-- Pilih Nama Anda --</option>`;
+    students.forEach(st => {
+      studentSelect.innerHTML += `<option value="${st.full_name}" data-number="${st.student_number || '-'}">${st.full_name}</option>`;
+    });
+  },
+
+  onDirectNameChange() {
+    const studentSelect = document.getElementById('directNameSelect');
+    const badge = document.getElementById('directNumberBadge');
+    const numText = document.getElementById('directNumberText');
+    if (!studentSelect || !badge) return;
+
+    const opt = studentSelect.options[studentSelect.selectedIndex];
+    const studentNumber = opt ? opt.dataset.number : '';
+
+    if (studentSelect.value && studentNumber && studentNumber !== '-') {
+      if (numText) numText.textContent = studentNumber;
+      badge.style.display = 'block';
+    } else {
+      badge.style.display = 'none';
+    }
+  },
+
+  async submitDirectEntry() {
+    if (!this.directLinkExam) return;
+
+    const classSelect = document.getElementById('directClassSelect');
+    const classId = classSelect ? classSelect.value : null;
+    const className = classSelect && classSelect.selectedIndex > 0 ? (classSelect.options[classSelect.selectedIndex].dataset.name || classSelect.options[classSelect.selectedIndex].text) : '';
+
+    const studentSelect = document.getElementById('directNameSelect');
+    const studentName = studentSelect ? studentSelect.value.trim() : '';
+    const studentNumber = studentSelect && studentSelect.selectedIndex > 0 ? (studentSelect.options[studentSelect.selectedIndex].dataset.number || '-') : '-';
+
+    const errorEl = document.getElementById('directLinkIdentityErrorMsg');
+    if (errorEl) errorEl.style.display = 'none';
+
+    if (!classId) {
+      if (errorEl) { errorEl.textContent = 'Harap pilih Kelas Anda terlebih dahulu.'; errorEl.style.display = 'block'; }
+      return;
+    }
+    if (!studentName) {
+      if (errorEl) { errorEl.textContent = 'Harap pilih Nama & Nomor Peserta Anda.'; errorEl.style.display = 'block'; }
+      return;
+    }
+
+    const startBtn = document.getElementById('btnStartDirectSession');
+    if (startBtn) { startBtn.disabled = true; startBtn.innerHTML = 'Memproses...'; }
+
+    try {
+      const result = await window.DB.startSessionByDirectLink(
+        this.directLinkExam.id,
+        studentName,
+        classId,
+        className,
+        studentNumber
+      );
+
+      if (!result.success) {
+        if (errorEl) { errorEl.textContent = result.message || 'Gagal memulai sesi ujian.'; errorEl.style.display = 'block'; }
+        Utils.showToast('Gagal', result.message || 'Gagal memulai sesi ujian.', 'error');
+        return;
+      }
+
+      StorageManager.saveActiveSession(result);
+      this.closeDirectLinkModal();
+      this.openConfirmationModal(result);
+    } catch (err) {
+      console.error('submitDirectEntry error:', err);
+      if (errorEl) { errorEl.textContent = `Terjadi kesalahan: ${err.message || 'Gagal memulai sesi'}`; errorEl.style.display = 'block'; }
+    } finally {
+      if (startBtn) { startBtn.disabled = false; startBtn.innerHTML = 'MULAI UJIAN'; }
+    }
+  },
+
   openConfirmationModal(sessionData) {
     const modal = document.getElementById('confirmModal');
     if (!modal) {
