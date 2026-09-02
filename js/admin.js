@@ -1182,7 +1182,7 @@ const AdminController = {
           <div class="modal-body" style="text-align:center;">
             <p style="font-weight:700; margin-bottom: 0.25rem;" id="examLinkTitle"></p>
             <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
-              Siswa yang men-scan QR ini atau membuka link ini akan langsung masuk ke menu ujian TANPA Token Masuk (hanya perlu Token Keluar saat selesai).
+              QR/link AMAN ini mengarah ke portal (bukan langsung ke Google Form), supaya sistem keamanan ujian tetap aktif. Siswa yang men-scan atau membuka link ini akan masuk ke menu ujian TANPA Token Masuk (hanya perlu Token Keluar saat selesai).
             </p>
             <div id="examLinkQrContainer" style="display:flex; justify-content:center; margin-bottom:1rem;"></div>
             <div class="form-group">
