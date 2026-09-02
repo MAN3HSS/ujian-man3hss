@@ -442,6 +442,22 @@
       if (examIdFromUrl && window.ExamsManager) {
         setTimeout(() => ExamsManager.openDirectLinkModal(examIdFromUrl), 300);
       }
+
+      // Jaring pengaman tambahan: klik area gelap di luar kotak modal, atau
+      // tekan Escape, untuk menutup modal Scan Barcode / Link Ujian.
+      const directLinkModal = document.getElementById('directLinkModal');
+      if (directLinkModal) {
+        directLinkModal.addEventListener('click', (e) => {
+          if (e.target === directLinkModal && window.ExamsManager) {
+            ExamsManager.closeDirectLinkModal();
+          }
+        });
+      }
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && directLinkModal && directLinkModal.classList.contains('active') && window.ExamsManager) {
+          ExamsManager.closeDirectLinkModal();
+        }
+      });
     });
   </script>
 
