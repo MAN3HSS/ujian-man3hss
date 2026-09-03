@@ -386,10 +386,17 @@ class FirebaseService {
    * selesai, memakai Token Keluar milik ujian ini jika diisi, atau
    * Token Keluar Default dari Pengaturan Portal jika tidak diisi.
    */
-  async startSessionByDirectLink(examId, studentName, classId, className, studentNumber = '') {
-    const preCheck = await this._preSessionCheck(examId, studentName, studentNumber);
+  async startSessionByDirectLink(examId, studentName, className) {
+    const cleanName = (studentName || 'Peserta Ujian').trim();
+    const cleanClass = (className || 'Akses Langsung (Link)').trim();
+
+    // Nama & kelas ditulis manual (bukan dari data siswa terdaftar), jadi
+    // kunci sesi-ganda tetap dipakai berdasarkan NAMA yang ditulis, supaya
+    // siswa yang sama tidak bisa mengerjakan ulang, sekaligus tetap
+    // tercatat jelas di Monitoring/Log.
+    const preCheck = await this._preSessionCheck(examId, cleanName, '', false);
     if (!preCheck.success) return preCheck;
-    return await this._createSession(preCheck.exam, studentName, classId, className, studentNumber, true);
+    return await this._createSession(preCheck.exam, cleanName, null, cleanClass, '-', true);
   }
 
   /**
@@ -397,8 +404,10 @@ class FirebaseService {
    * kunci sesi ganda (siswa yang sudah selesai/dikeluarkan tidak bisa
    * masuk lagi). Dipakai oleh verifyTokenAndStartSession &
    * startSessionByDirectLink supaya aturan konsisten di kedua jalur masuk.
+   * skipDuplicateCheck: lewati kunci sesi-ganda (dipakai jalur akses tanpa
+   * identitas siswa, karena tidak ada nama/nomor unik untuk dibandingkan).
    */
-  async _preSessionCheck(examId, studentName, studentNumber) {
+  async _preSessionCheck(examId, studentName, studentNumber, skipDuplicateCheck = false) {
     const isPaused = await this.isGlobalExamPaused();
     if (isPaused) {
       return {
@@ -419,6 +428,10 @@ class FirebaseService {
     }
     if (new Date(exam.end_at) < now) {
       return { success: false, message: 'Jadwal ujian ini telah berakhir.' };
+    }
+
+    if (skipDuplicateCheck) {
+      return { success: true, exam };
     }
 
     const sessions = await this.getActiveSessions();
