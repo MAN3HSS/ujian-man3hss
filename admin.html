@@ -589,10 +589,50 @@
                 <div style="font-size:0.85rem; color:var(--text-muted); margin-top: 0.35rem;">
                   Dipakai sebagai Token Keluar untuk siswa yang masuk lewat fitur Scan Barcode / Link Ujian (tanpa Token Masuk). Berlaku hanya jika ujian tersebut tidak diisi Token Keluar-nya sendiri.
                 </div>
+
+                <label class="form-label" for="settingDefaultExamDuration" style="font-weight: 700; color: var(--primary-800); margin-top: 1rem;">
+                  ⏱️ Durasi Ujian Default (menit)
+                </label>
+                <input type="number" id="settingDefaultExamDuration" class="form-input" placeholder="60" min="1" max="300" style="max-width: 120px; font-weight: 700;">
+                <div style="font-size:0.85rem; color:var(--text-muted); margin-top: 0.35rem;">
+                  Dipakai sebagai durasi pengerjaan ketika ujian baru dibuat OTOMATIS dari link Google Form yang belum terdaftar (lewat fitur Scan Barcode / Link Ujian).
+                </div>
               </div>
 
               <button type="submit" class="btn btn-primary" style="margin-bottom: 2rem;">SIMPAN PERUBAHAN PENGATURAN</button>
             </form>
+
+            <!-- PANEL: KELOLA & BERSIHKAN DATA -->
+            <div class="card" style="padding: 1.25rem 1.5rem; margin-top: 1rem; border: 1px solid var(--danger); background: var(--danger-bg);">
+              <h3 style="color: var(--danger); margin-bottom: 0.25rem;">🗑️ Kelola & Bersihkan Data</h3>
+              <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom: 1.25rem;">
+                Bersihkan data "sampah" yang menumpuk seiring waktu, supaya database tidak terus membengkak. Data ujian & siswa yang Anda kelola manual TIDAK akan ikut terhapus oleh tombol-tombol ini.
+              </p>
+
+              <div style="background: var(--bg-surface); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border-subtle);">
+                <div style="font-weight:700; margin-bottom: 0.5rem;">
+                  📎 Ujian Otomatis dari Link Tempel: <span id="selfServiceExamStats">memuat...</span>
+                </div>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.75rem;">
+                  Ujian yang otomatis dibuat sistem saat ada yang menempel link Google Form baru lewat menu "Scan Barcode / Link Ujian" (bukan dibuat manual oleh Anda di menu Ujian).
+                </div>
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="AdminController.cleanupExpiredSelfServiceExams()">
+                    🧹 Hapus yang Sudah Kedaluwarsa (&gt;30 hari)
+                  </button>
+                  <button type="button" class="btn btn-sm btn-danger" onclick="AdminController.cleanupAllSelfServiceExams()">
+                    🗑️ Hapus SEMUA Ujian Otomatis dari Link
+                  </button>
+                </div>
+              </div>
+
+              <div style="background: var(--bg-surface); border-radius: var(--radius-md); padding: 1rem; border: 1px solid var(--border-subtle);">
+                <div style="font-weight:700; margin-bottom: 0.5rem;">📋 Log Sesi & Pelanggaran</div>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.75rem;">
+                  Untuk membersihkan log sesi ujian & log pelanggaran siswa, gunakan tombol yang tersedia di menu <strong>Monitoring</strong> dan <strong>Log Pelanggaran</strong>.
+                </div>
+              </div>
+            </div>
 
             <hr style="border: 0; border-top: 1px solid var(--border-medium); margin: 2rem 0;">
 
