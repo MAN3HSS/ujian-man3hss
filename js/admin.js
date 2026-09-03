@@ -1087,6 +1087,11 @@ const AdminController = {
     const defExitEl = document.getElementById('settingDefaultExitToken');
     if (defExitEl) defExitEl.value = settings.default_exit_token || 'SELESAI';
 
+    const defDurationEl = document.getElementById('settingDefaultExamDuration');
+    if (defDurationEl) defDurationEl.value = settings.default_exam_duration_minutes || 60;
+
+    this.refreshSelfServiceExamStats();
+
     // Load current admin credentials
     if (window.AuthManager) {
       const creds = AuthManager.getAdminCredentials();
@@ -1110,6 +1115,7 @@ const AdminController = {
     const menuKhusus = document.getElementById('toggleMenuKhusus').checked;
     const defaultMaxViolations = parseInt(document.getElementById('settingDefaultMaxViolations')?.value, 10) || 3;
     const defaultExitToken = (document.getElementById('settingDefaultExitToken')?.value || 'SELESAI').trim().toUpperCase();
+    const defaultExamDuration = parseInt(document.getElementById('settingDefaultExamDuration')?.value, 10) || 60;
 
     await window.DB.saveSettings({
       academic_year: academicYear,
@@ -1119,7 +1125,8 @@ const AdminController = {
       menu_tryout_enabled: menuTryout,
       menu_khusus_enabled: menuKhusus,
       default_max_violations: defaultMaxViolations,
-      default_exit_token: defaultExitToken
+      default_exit_token: defaultExitToken,
+      default_exam_duration_minutes: defaultExamDuration
     });
 
     Utils.showToast('Berhasil', 'Pengaturan portal dan batas pelanggaran berhasil diperbarui!', 'success');
@@ -1224,6 +1231,50 @@ const AdminController = {
       document.execCommand('copy');
       Utils.showToast('Tersalin', 'Link ujian berhasil disalin.', 'success');
     });
+  },
+
+  /* --------------------------------------------------------------------------
+     KELOLA & BERSIHKAN DATA (Ujian Otomatis dari Link Tempel)
+  -------------------------------------------------------------------------- */
+  async refreshSelfServiceExamStats() {
+    const el = document.getElementById('selfServiceExamStats');
+    if (!el) return;
+    try {
+      const stats = await window.DB.getSelfServiceExamStats();
+      el.textContent = `${stats.total} ujian tersimpan (${stats.expired} sudah kedaluwarsa)`;
+    } catch (err) {
+      el.textContent = 'gagal memuat';
+      console.warn('refreshSelfServiceExamStats error:', err);
+    }
+  },
+
+  async cleanupExpiredSelfServiceExams() {
+    try {
+      const count = await window.DB.deleteExpiredSelfServiceExams();
+      if (count === 0) {
+        Utils.showToast('Tidak Ada', 'Tidak ada ujian otomatis yang sudah kedaluwarsa saat ini.', 'info');
+      } else {
+        Utils.showToast('Dibersihkan', `${count} ujian otomatis yang sudah kedaluwarsa berhasil dihapus.`, 'success');
+      }
+      this.refreshSelfServiceExamStats();
+    } catch (err) {
+      console.error('cleanupExpiredSelfServiceExams error:', err);
+      Utils.showToast('Gagal', 'Terjadi kesalahan saat membersihkan data.', 'error');
+    }
+  },
+
+  async cleanupAllSelfServiceExams() {
+    if (!confirm('⚠️ Ini akan menghapus SEMUA ujian yang dibuat otomatis lewat fitur "Scan Barcode / Link Ujian", termasuk yang MASIH BERLAKU/sedang dipakai siswa. Ujian buatan Admin tidak terpengaruh. Lanjutkan?')) {
+      return;
+    }
+    try {
+      const count = await window.DB.deleteAllSelfServiceExams();
+      Utils.showToast('Dibersihkan', `${count} ujian otomatis berhasil dihapus semua.`, 'success');
+      this.refreshSelfServiceExamStats();
+    } catch (err) {
+      console.error('cleanupAllSelfServiceExams error:', err);
+      Utils.showToast('Gagal', 'Terjadi kesalahan saat membersihkan data.', 'error');
+    }
   }
 };
 
