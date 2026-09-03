@@ -70,7 +70,8 @@ class FirebaseService {
         menu_remedial_enabled: true,
         menu_tryout_enabled: false,
         menu_khusus_enabled: false,
-        default_exit_token: 'SELESAI'
+        default_exit_token: 'SELESAI',
+        default_exam_duration_minutes: 60
       });
     }
 
@@ -119,7 +120,8 @@ class FirebaseService {
         menu_remedial_enabled: true,
         menu_tryout_enabled: false,
         menu_khusus_enabled: false,
-        default_exit_token: 'SELESAI'
+        default_exit_token: 'SELESAI',
+        default_exam_duration_minutes: 60
       };
       await ref.set(defaults);
       return defaults;
@@ -668,6 +670,84 @@ class FirebaseService {
     return true;
   }
 
+  _extractGoogleFormId(text) {
+    const match = (text || '').match(/forms\/d\/e\/([a-zA-Z0-9_-]+)/) || (text || '').match(/forms\/d\/([a-zA-Z0-9_-]+)/);
+    return match ? match[1] : null;
+  }
+
+  /**
+   * Dipakai fitur "Scan Barcode / Link Ujian" ketika ada yang menempel link
+   * Google Form yang BELUM terdaftar sebagai ujian. Ujian baru otomatis
+   * dibuat & langsung aktif — TIDAK perlu isi apapun (judul & durasi pakai
+   * default dari Pengaturan Admin). Ujian ini cuma bisa diakses lewat
+   * link/QR-nya sendiri (tidak muncul di daftar ujian per-kelas biasa,
+   * karena tidak diikat ke kelas manapun), tapi tetap terlihat & bisa
+   * dikelola/diedit oleh Admin di menu Ujian.
+   */
+  async createExamFromLink(formUrl) {
+    const cleanFormUrl = (formUrl || '').trim();
+    const scannedFormId = this._extractGoogleFormId(cleanFormUrl);
+
+    // Cegah duplikat: kalau link (Google Form) ini sudah pernah didaftarkan
+    // sebagai ujian sebelumnya (oleh guru lain / admin), pakai yang sudah
+    // ada saja, jangan buat ujian baru lagi.
+    const existingExams = await this.getAllExamsAdmin();
+    const duplicate = existingExams.find(e => {
+      if ((e.form_url || '').trim() === cleanFormUrl) return true;
+      if (scannedFormId && this._extractGoogleFormId(e.form_url || '') === scannedFormId) return true;
+      return false;
+    });
+    if (duplicate) return duplicate;
+
+    const settings = await this.getSettings();
+    const now = new Date();
+    const farFuture = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // +30 hari
+
+    const autoSubject = `Ujian Otomatis - ${now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })} ${now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+
+    const examData = {
+      subject: autoSubject,
+      title: autoSubject,
+      type: 'Ujian Utama',
+      classes: [], // Tidak diikat ke kelas manapun — hanya bisa diakses lewat link/QR ini
+      duration_minutes: parseInt(settings.default_exam_duration_minutes, 10) || 60,
+      start_at: now.toISOString(),
+      end_at: farFuture.toISOString(),
+      form_url: cleanFormUrl,
+      allow_iframe: true,
+      token_masuk_plain: '',
+      token_hash: null,
+      token_keluar_plain: settings.default_exit_token || 'SELESAI',
+      token_keluar_hash: null,
+      max_violations: settings.default_max_violations || 3,
+      status: 'active',
+      created_via: 'guru_link_mandiri'
+    };
+
+    // Field khusus untuk Firestore TTL (Time-to-Live): dokumen ini akan
+    // OTOMATIS DIHAPUS oleh Firestore sendiri setelah tanggal ini lewat
+    // (±30 hari sejak dibuat) — TAPI hanya jika Anda sudah mengaktifkan
+    // TTL Policy di Firebase Console untuk field 'auto_delete_at' pada
+    // koleksi 'exams'. Ujian buatan Admin (lewat menu Ujian) tidak punya
+    // field ini, jadi tidak akan pernah ikut terhapus otomatis.
+    if (this.isLive && window.firebase?.firestore?.Timestamp) {
+      examData.auto_delete_at = firebase.firestore.Timestamp.fromDate(farFuture);
+    }
+
+    let newId;
+    if (!this.isLive) {
+      newId = `e_${Date.now()}`;
+      const exams = StorageManager.get('db_exams', []);
+      exams.unshift({ id: newId, ...examData });
+      StorageManager.set('db_exams', exams);
+    } else {
+      const ref = await this._col('exams').add(examData);
+      newId = ref.id;
+    }
+
+    return { id: newId, ...examData };
+  }
+
   async deleteExam(examId) {
     if (!this.isLive) {
       let exams = StorageManager.get('db_exams', []);
@@ -677,6 +757,66 @@ class FirebaseService {
     }
     await this._col('exams').doc(examId).delete();
     return true;
+  }
+
+  /**
+   * Hitung berapa banyak ujian otomatis (hasil fitur tempel link Google
+   * Form) yang saat ini tersimpan, dan berapa di antaranya sudah lewat
+   * masa berlaku (>30 hari / sudah melewati end_at). Dipakai panel
+   * "Kelola & Bersihkan Data" di menu Pengaturan Admin.
+   */
+  async getSelfServiceExamStats() {
+    const exams = await this.getAllExamsAdmin();
+    const selfServiceExams = exams.filter(e => e.created_via === 'guru_link_mandiri');
+    const now = new Date();
+    const expiredCount = selfServiceExams.filter(e => e.end_at && new Date(e.end_at) < now).length;
+    return { total: selfServiceExams.length, expired: expiredCount };
+  }
+
+  /**
+   * Hapus HANYA ujian otomatis dari link yang sudah KEDALUWARSA (lewat
+   * end_at-nya, defaultnya 30 hari sejak dibuat). Ujian yang masih
+   * berlaku, dan ujian buatan Admin, tidak akan ikut terhapus.
+   */
+  async deleteExpiredSelfServiceExams() {
+    const exams = await this.getAllExamsAdmin();
+    const now = new Date();
+    const targets = exams.filter(e => e.created_via === 'guru_link_mandiri' && e.end_at && new Date(e.end_at) < now);
+
+    if (!this.isLive) {
+      const targetIds = new Set(targets.map(e => e.id));
+      let allExams = StorageManager.get('db_exams', []);
+      allExams = allExams.filter(e => !targetIds.has(e.id));
+      StorageManager.set('db_exams', allExams);
+      return targets.length;
+    }
+
+    const batch = this.db.batch();
+    targets.forEach(e => batch.delete(this._col('exams').doc(e.id)));
+    if (targets.length > 0) await batch.commit();
+    return targets.length;
+  }
+
+  /**
+   * Hapus SEMUA ujian otomatis dari link (guru_link_mandiri), TANPA
+   * peduli sudah kedaluwarsa atau belum. Ujian buatan Admin tetap aman.
+   */
+  async deleteAllSelfServiceExams() {
+    const exams = await this.getAllExamsAdmin();
+    const targets = exams.filter(e => e.created_via === 'guru_link_mandiri');
+
+    if (!this.isLive) {
+      const targetIds = new Set(targets.map(e => e.id));
+      let allExams = StorageManager.get('db_exams', []);
+      allExams = allExams.filter(e => !targetIds.has(e.id));
+      StorageManager.set('db_exams', allExams);
+      return targets.length;
+    }
+
+    const batch = this.db.batch();
+    targets.forEach(e => batch.delete(this._col('exams').doc(e.id)));
+    if (targets.length > 0) await batch.commit();
+    return targets.length;
   }
 
   /* ============================================================
