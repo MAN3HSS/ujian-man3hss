@@ -21,11 +21,32 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Data master ujian: publik boleh baca (untuk cek jadwal/token),
-    // hanya admin yang boleh tulis/ubah/hapus.
+    // Validasi ketat untuk ujian yang dibuat GURU TANPA LOGIN lewat fitur
+    // "Scan Barcode / Link Ujian" (link Google Form baru). Guru cuma bisa
+    // membuat dokumen ujian baru dengan bentuk data spesifik ini — TIDAK
+    // bisa mengubah/menghapus ujian manapun (itu tetap khusus Admin), dan
+    // tidak bisa membuat ujian yang diikat ke kelas tertentu.
+    function isValidSelfServiceExam() {
+      let d = request.resource.data;
+      return d.created_via == 'guru_link_mandiri'
+        && d.status == 'active'
+        && d.classes is list && d.classes.size() == 0
+        && d.form_url is string && d.form_url.size() > 0 && d.form_url.size() < 500
+        && d.subject is string && d.subject.size() > 0 && d.subject.size() < 150
+        && d.title is string
+        && d.duration_minutes is number && d.duration_minutes > 0 && d.duration_minutes <= 300
+        && d.token_masuk_plain == ''
+        && d.max_violations is number;
+    }
+
+    // Data master ujian: publik boleh baca (untuk cek jadwal/token).
+    // Admin boleh tulis/ubah/hapus apapun. Guru (tanpa login) HANYA boleh
+    // membuat ujian baru lewat link Google Form (bentuk data dibatasi
+    // ketat oleh isValidSelfServiceExam), tidak bisa ubah/hapus.
     match /exams/{examId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create: if isAdmin() || isValidSelfServiceExam();
+      allow update, delete: if isAdmin();
     }
 
     // Kelas: publik boleh baca, admin yang kelola.
