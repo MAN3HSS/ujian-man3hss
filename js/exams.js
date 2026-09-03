@@ -361,6 +361,10 @@ const ExamsManager = {
     if (urlInput) urlInput.value = prefillExamId || '';
     const errEl = document.getElementById('directLinkErrorMsg');
     if (errEl) errEl.style.display = 'none';
+    const nameInput = document.getElementById('directNameInput');
+    if (nameInput) nameInput.value = '';
+    const classInput = document.getElementById('directClassInput');
+    if (classInput) classInput.value = '';
 
     modal.classList.add('active');
     const container = modal.querySelector('.modal-container');
@@ -556,83 +560,25 @@ const ExamsManager = {
     document.getElementById('directLinkStepFind').style.display = 'none';
     document.getElementById('directLinkStepIdentity').style.display = 'block';
     document.getElementById('btnStartDirectSession').style.display = 'block';
-
-    // Populate dropdown kelas (semua kelas, tidak difilter jenjang karena
-    // masuk lewat link bisa dari jenjang manapun)
-    const classSelect = document.getElementById('directClassSelect');
-    const classes = await window.DB.getClasses();
-    classSelect.innerHTML = `<option value="">-- Pilih Kelas Anda --</option>`;
-    classes.forEach(c => {
-      classSelect.innerHTML += `<option value="${c.id}" data-name="${c.name}">${c.name}</option>`;
-    });
-  },
-
-
-  async onDirectClassChange() {
-    const classSelect = document.getElementById('directClassSelect');
-    const studentSelect = document.getElementById('directNameSelect');
-    const badge = document.getElementById('directNumberBadge');
-    if (!classSelect || !studentSelect) return;
-
-    const classId = classSelect.value;
-    if (badge) badge.style.display = 'none';
-
-    if (!classId) {
-      studentSelect.innerHTML = `<option value="">-- Pilih Kelas Terlebih Dahulu --</option>`;
-      return;
-    }
-
-    studentSelect.innerHTML = `<option value="">Memuat nama siswa...</option>`;
-    const students = await window.DB.getStudents(classId);
-
-    if (!students || students.length === 0) {
-      studentSelect.innerHTML = `<option value="">-- Belum ada data siswa di kelas ini --</option>`;
-      return;
-    }
-
-    studentSelect.innerHTML = `<option value="">-- Pilih Nama Anda --</option>`;
-    students.forEach(st => {
-      studentSelect.innerHTML += `<option value="${st.full_name}" data-number="${st.student_number || '-'}">${st.full_name}</option>`;
-    });
-  },
-
-  onDirectNameChange() {
-    const studentSelect = document.getElementById('directNameSelect');
-    const badge = document.getElementById('directNumberBadge');
-    const numText = document.getElementById('directNumberText');
-    if (!studentSelect || !badge) return;
-
-    const opt = studentSelect.options[studentSelect.selectedIndex];
-    const studentNumber = opt ? opt.dataset.number : '';
-
-    if (studentSelect.value && studentNumber && studentNumber !== '-') {
-      if (numText) numText.textContent = studentNumber;
-      badge.style.display = 'block';
-    } else {
-      badge.style.display = 'none';
-    }
   },
 
   async submitDirectEntry() {
     if (!this.directLinkExam) return;
 
-    const classSelect = document.getElementById('directClassSelect');
-    const classId = classSelect ? classSelect.value : null;
-    const className = classSelect && classSelect.selectedIndex > 0 ? (classSelect.options[classSelect.selectedIndex].dataset.name || classSelect.options[classSelect.selectedIndex].text) : '';
-
-    const studentSelect = document.getElementById('directNameSelect');
-    const studentName = studentSelect ? studentSelect.value.trim() : '';
-    const studentNumber = studentSelect && studentSelect.selectedIndex > 0 ? (studentSelect.options[studentSelect.selectedIndex].dataset.number || '-') : '-';
+    const nameInput = document.getElementById('directNameInput');
+    const classInput = document.getElementById('directClassInput');
+    const studentName = nameInput ? nameInput.value.trim() : '';
+    const className = classInput ? classInput.value.trim() : '';
 
     const errorEl = document.getElementById('directLinkIdentityErrorMsg');
     if (errorEl) errorEl.style.display = 'none';
 
-    if (!classId) {
-      if (errorEl) { errorEl.textContent = 'Harap pilih Kelas Anda terlebih dahulu.'; errorEl.style.display = 'block'; }
+    if (!studentName) {
+      if (errorEl) { errorEl.textContent = 'Harap tulis Nama Lengkap Anda.'; errorEl.style.display = 'block'; }
       return;
     }
-    if (!studentName) {
-      if (errorEl) { errorEl.textContent = 'Harap pilih Nama & Nomor Peserta Anda.'; errorEl.style.display = 'block'; }
+    if (!className) {
+      if (errorEl) { errorEl.textContent = 'Harap tulis Kelas Anda.'; errorEl.style.display = 'block'; }
       return;
     }
 
@@ -640,13 +586,7 @@ const ExamsManager = {
     if (startBtn) { startBtn.disabled = true; startBtn.innerHTML = 'Memproses...'; }
 
     try {
-      const result = await window.DB.startSessionByDirectLink(
-        this.directLinkExam.id,
-        studentName,
-        classId,
-        className,
-        studentNumber
-      );
+      const result = await window.DB.startSessionByDirectLink(this.directLinkExam.id, studentName, className);
 
       if (!result.success) {
         if (errorEl) { errorEl.textContent = result.message || 'Gagal memulai sesi ujian.'; errorEl.style.display = 'block'; }
