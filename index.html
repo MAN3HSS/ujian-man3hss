@@ -277,7 +277,7 @@
           </div>
         </div>
 
-        <!-- STEP B: Identitas Siswa (muncul setelah ujian ditemukan) -->
+        <!-- STEP B: Konfirmasi Ujian (muncul setelah link ditemukan/dibuat) -->
         <div id="directLinkStepIdentity" style="display:none;">
           <div style="background: var(--bg-surface-muted); padding: 0.9rem 1.15rem; border-radius: var(--radius-md); margin-bottom: 1.25rem; border: 1px solid var(--border-subtle);">
             <div id="directLinkExamSubject" style="font-size: 0.775rem; font-weight: 700; color: var(--primary-700); text-transform: uppercase;"></div>
@@ -286,20 +286,13 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="directClassSelect">1. Pilih Kelas / Rombel Anda</label>
-            <select id="directClassSelect" class="form-select" onchange="ExamsManager.onDirectClassChange()" required>
-              <option value="">-- Pilih Kelas Anda --</option>
-            </select>
+            <label class="form-label" for="directNameInput">1. Nama Lengkap Anda</label>
+            <input type="text" id="directNameInput" class="form-input" placeholder="Tulis nama lengkap Anda" autocomplete="off">
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="directNameSelect">2. Pilih Nama & Nomor Peserta</label>
-            <select id="directNameSelect" class="form-select" onchange="ExamsManager.onDirectNameChange()" required>
-              <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
-            </select>
-            <div id="directNumberBadge" style="display: none; margin-top: 0.4rem; font-size: 0.825rem; color: var(--primary-800); font-weight: 700; font-family: var(--font-mono); background: var(--primary-light); padding: 0.3rem 0.65rem; border-radius: var(--radius-sm); width: fit-content; border: 1px solid var(--primary-200);">
-              Nomor Peserta: <span id="directNumberText">-</span>
-            </div>
+            <label class="form-label" for="directClassInput">2. Kelas Anda</label>
+            <input type="text" id="directClassInput" class="form-input" placeholder="Contoh: XII IPA 1" autocomplete="off">
           </div>
 
           <div style="font-size: 0.775rem; color: var(--text-muted); text-align: center; margin-bottom: 0.75rem;">
