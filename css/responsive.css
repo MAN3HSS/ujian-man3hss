@@ -145,19 +145,71 @@
   /* Exam Topbar Mobile */
   .exam-topbar {
     flex-direction: column;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
+    gap: 0.6rem;
+    padding: 0.6rem 0.85rem;
   }
 
   .exam-info-header {
     width: 100%;
     justify-content: space-between;
+    gap: 0.6rem;
+  }
+
+  .brand-logo-img {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .exam-title-text {
+    font-size: 0.9rem;
+  }
+
+  .exam-subject-sub {
+    font-size: 0.68rem;
+  }
+
+  #examStudentBadge {
+    font-size: 0.62rem !important;
+    padding: 0.15rem 0.45rem !important;
   }
 
   .timer-container {
     width: 100%;
     justify-content: center;
-    padding: 0.4rem 1rem;
+    padding: 0.35rem 0.85rem;
+    gap: 0.5rem;
+  }
+
+  .timer-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .timer-digits {
+    font-size: 1.25rem;
+    min-width: 110px;
+  }
+
+  .exam-header-actions {
+    width: 100%;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .security-capsule {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+    gap: 0.35rem;
+  }
+
+  .violation-pill {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .exam-header-actions .btn {
+    font-size: 0.75rem;
+    padding: 0.45rem 0.85rem;
   }
 
   /* Modal on Mobile */
@@ -199,5 +251,46 @@
 
   .kpi-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Exam Topbar - HP sangat kecil */
+  .exam-title-text {
+    font-size: 0.82rem;
+  }
+
+  .exam-subject-sub {
+    font-size: 0.6rem;
+  }
+
+  .timer-digits {
+    font-size: 1.05rem;
+    min-width: 92px;
+  }
+
+  .timer-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .security-capsule-label {
+    display: none;
+  }
+
+  .security-capsule {
+    padding: 0.35rem;
+  }
+
+  .violation-pill {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .violation-pill span:first-child {
+    display: none;
+  }
+
+  .exam-header-actions .btn {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.7rem;
   }
 }
