@@ -11,6 +11,16 @@ const ViolationTracker = {
   audioCtx: null,
   alarmInterval: null,
 
+  /**
+   * Deteksi perangkat sentuh (HP/tablet). Dipakai untuk melewati beberapa
+   * deteksi pelanggaran yang rawan salah tangkap di HP akibat interaksi
+   * sentuh + keyboard virtual + fokus berpindah ke iframe Google Form —
+   * yang perilakunya berbeda dari klik mouse di PC.
+   */
+  isTouchDevice() {
+    return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+  },
+
   init(sessionData) {
     this.maxAllowed = sessionData?.max_violations || 3;
     this.violationCount = sessionData?.violation_count || 0;
@@ -120,9 +130,17 @@ const ViolationTracker = {
   },
 
   /**
-   * Window Blur detection
+   * Window Blur detection.
+   * DILEWATI di perangkat sentuh (HP/tablet) — di HP, menyentuh kolom
+   * jawaban di dalam iframe Google Form seringkali membuat window terdeteksi
+   * "blur" walau siswa TIDAK benar-benar berpindah aplikasi, karena cara
+   * fokus & keyboard virtual bekerja berbeda dari klik mouse di PC. Deteksi
+   * "berpindah aplikasi" di HP sudah diwakili oleh TAB_SWITCH (Page
+   * Visibility API) yang jauh lebih akurat untuk perangkat sentuh.
    */
   setupWindowBlurListener() {
+    if (this.isTouchDevice()) return;
+
     window.addEventListener('blur', () => {
       setTimeout(() => {
         if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
@@ -150,17 +168,23 @@ const ViolationTracker = {
     // kemungkinan besar terbuka untuk mengetik, bukan floating window.
     let lastHeight = window.innerHeight;
     window.addEventListener('resize', () => {
-      const currentHeight = window.innerHeight;
-      const screenH = window.screen.height || screen.availHeight;
+      // Beri jeda sesaat sebelum menilai — di HP, fokus baru "menetap" ke
+      // kolom input/iframe sesaat setelah keyboard virtual mulai muncul
+      // (yang juga memicu event resize ini). Menilai terlalu cepat bisa
+      // salah kira keyboard yang baru muncul sebagai floating window.
+      setTimeout(() => {
+        const currentHeight = window.innerHeight;
+        const screenH = window.screen.height || screen.availHeight;
 
-      const activeTag = document.activeElement ? document.activeElement.tagName : '';
-      const likelyKeyboardOpen = ['INPUT', 'TEXTAREA', 'SELECT', 'IFRAME'].includes(activeTag);
+        const activeTag = document.activeElement ? document.activeElement.tagName : '';
+        const likelyKeyboardOpen = ['INPUT', 'TEXTAREA', 'SELECT', 'IFRAME'].includes(activeTag);
 
-      // If height dropped significantly while in exam, student opened split-screen or floating app
-      if (screenH > 500 && currentHeight < screenH * 0.72 && !document.hidden && !likelyKeyboardOpen) {
-        this.triggerViolation('SPLIT_SCREEN_MULTIWINDOW', { detail: 'Layar terbagi / Floating window terdeteksi' });
-      }
-      lastHeight = currentHeight;
+        // If height dropped significantly while in exam, student opened split-screen or floating app
+        if (screenH > 500 && currentHeight < screenH * 0.72 && !document.hidden && !likelyKeyboardOpen) {
+          this.triggerViolation('SPLIT_SCREEN_MULTIWINDOW', { detail: 'Layar terbagi / Floating window terdeteksi' });
+        }
+        lastHeight = currentHeight;
+      }, 250);
     });
 
     // 2. Screenshot Key Detection (PrintScreen, Win+Shift+S, Snipping Tool)
