@@ -140,13 +140,24 @@ const ViolationTracker = {
    */
   setupHardwareAndPeripheralWatchers() {
     // 1. Split Screen / Multi-Window on Mobile (Viewport Shrink Detection)
+    //
+    // PENTING: keyboard virtual HP yang muncul saat mengetik (nama, jawaban
+    // esai, dll di dalam Google Form) JUGA mengecilkan window.innerHeight
+    // di banyak browser HP — persis seperti pola split-screen/floating
+    // window. Supaya tidak salah dianggap pelanggaran setiap kali siswa
+    // mengetik, deteksi ini DILEWATI selama ada elemen input/textarea/
+    // iframe (Google Form) yang sedang fokus, karena itu tandanya keyboard
+    // kemungkinan besar terbuka untuk mengetik, bukan floating window.
     let lastHeight = window.innerHeight;
     window.addEventListener('resize', () => {
       const currentHeight = window.innerHeight;
       const screenH = window.screen.height || screen.availHeight;
-      
+
+      const activeTag = document.activeElement ? document.activeElement.tagName : '';
+      const likelyKeyboardOpen = ['INPUT', 'TEXTAREA', 'SELECT', 'IFRAME'].includes(activeTag);
+
       // If height dropped significantly while in exam, student opened split-screen or floating app
-      if (screenH > 500 && currentHeight < screenH * 0.72 && !document.hidden) {
+      if (screenH > 500 && currentHeight < screenH * 0.72 && !document.hidden && !likelyKeyboardOpen) {
         this.triggerViolation('SPLIT_SCREEN_MULTIWINDOW', { detail: 'Layar terbagi / Floating window terdeteksi' });
       }
       lastHeight = currentHeight;
