@@ -307,8 +307,9 @@ const ViolationTracker = {
     const modal = document.getElementById('violationModal');
     if (modal) modal.classList.remove('active');
 
-    // Re-lock Fullscreen
-    if (window.SecurityGuard) {
+    // Re-lock Fullscreen — HANYA di PC/laptop (lihat catatan di security.js
+    // soal kenapa fullscreen tidak dipaksakan di HP).
+    if (window.SecurityGuard && !SecurityGuard.isTouchDevice()) {
       SecurityGuard.attemptFullscreen();
     }
   }
