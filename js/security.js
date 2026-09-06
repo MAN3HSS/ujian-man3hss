@@ -8,6 +8,13 @@ const SecurityGuard = {
   isLocked: false,
 
   /**
+   * Deteksi perangkat sentuh (HP/tablet).
+   */
+  isTouchDevice() {
+    return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+  },
+
+  /**
    * Initialize security listeners for the exam gateway
    */
   initExamSecurity() {
@@ -15,7 +22,21 @@ const SecurityGuard = {
     this.disableCopyPasteSelection();
     this.disableDeveloperShortcuts();
     this.setupNavigationGuard();
-    this.setupFullscreenEnforcement();
+
+    // PENTING: pengawasan Fullscreen HANYA diterapkan di PC/laptop.
+    // Di HP, banyak browser (Chrome Android, Safari iOS) OTOMATIS keluar
+    // dari fullscreen setiap kali keyboard virtual muncul untuk mengetik —
+    // ini perilaku bawaan sistem HP yang tidak bisa dicegah dari kode web
+    // manapun. Kalau tetap dipaksakan, setiap siswa mengetik jawaban akan
+    // salah tercatat sebagai "keluar fullscreen" (pelanggaran). Keamanan
+    // di HP tetap terjaga lewat deteksi pindah aplikasi (Tab Switch) dan
+    // layar terbagi/floating window, yang tidak punya masalah serupa.
+    if (!this.isTouchDevice()) {
+      this.setupFullscreenEnforcement();
+    } else {
+      const fsOverlay = document.getElementById('fullscreenLockOverlay');
+      if (fsOverlay) fsOverlay.style.display = 'none';
+    }
   },
 
   /**
