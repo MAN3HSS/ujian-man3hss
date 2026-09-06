@@ -33,9 +33,16 @@ const SecurityGuard = {
       if (fsOverlay) fsOverlay.style.display = 'none';
     }
 
-    // Re-attempt on any initial click/touch in case browser requires immediate interaction
+    // Re-attempt on any initial click/touch in case browser requires immediate interaction.
+    // PENTING: listener ini di-LEPAS begitu fullscreen berhasil aktif, supaya
+    // tidak terus memanggil ulang requestFullscreen() di SETIAP tap siswa
+    // selama ujian — pemanggilan berulang ini bisa mengganggu/menunda tap
+    // yang seharusnya diteruskan ke kolom isian Google Form di dalam iframe.
     const initialClickHandler = () => {
-      this.attemptFullscreen();
+      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      if (!isFs) {
+        this.attemptFullscreen();
+      }
     };
     document.addEventListener('click', initialClickHandler);
     document.addEventListener('touchstart', initialClickHandler);
@@ -52,6 +59,9 @@ const SecurityGuard = {
         }
       } else {
         if (fsOverlay) fsOverlay.style.display = 'none';
+        // Fullscreen berhasil aktif — hentikan percobaan ulang di tiap tap.
+        document.removeEventListener('click', initialClickHandler);
+        document.removeEventListener('touchstart', initialClickHandler);
       }
     };
 
