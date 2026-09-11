@@ -37,6 +37,65 @@ const ExamSession = {
   },
 
   startProctorHeartbeatChecker() {
+    // Kalau Firestore tersambung (mode live), pakai REALTIME LISTENER —
+    // jauh lebih hemat & cepat daripada "polling" (nanya berulang tiap
+    // beberapa detik). Database yang akan memberi tahu kita begitu ada
+    // perubahan, bukan kita yang terus-menerus mengambil SEMUA data sesi
+    // tiap 1,5 detik (yang sebelumnya bisa membengkak parah kalau banyak
+    // siswa ujian bersamaan). Untuk mode demo lokal (tanpa Firestore),
+    // tetap pakai cara polling lama sebagai cadangan.
+    if (window.DB && window.DB.isLive && window.DB.db) {
+      this._startRealtimeSessionWatcher();
+    } else {
+      this._startPollingFallback();
+    }
+  },
+
+  _startRealtimeSessionWatcher() {
+    const sessId = this.session.session_id || this.session.session_token || this.session.session_identifier;
+    if (!sessId) return;
+
+    // Listener 1: pantau status sesi milik siswa INI SENDIRI (1 dokumen
+    // saja, bukan seluruh koleksi sesi) — realtime, tanpa polling berulang.
+    try {
+      this._sessionUnsub = window.DB.db.collection('sessions').doc(sessId)
+        .onSnapshot((doc) => {
+          if (doc.exists && doc.data().status === 'terminated') {
+            this._stopRealtimeSessionWatcher();
+            this.handleForcedTermination();
+          }
+        }, (err) => console.warn('Session realtime listener error:', err));
+    } catch (err) {
+      console.warn('Gagal memasang session listener, fallback ke polling:', err);
+      this._startPollingFallback();
+      return;
+    }
+
+    // Listener 2: pantau jeda darurat global (1 dokumen pengaturan saja).
+    try {
+      this._settingsUnsub = window.DB.db.collection('settings').doc('main')
+        .onSnapshot((doc) => {
+          if (doc.exists && doc.data().global_exam_paused) {
+            this._stopRealtimeSessionWatcher();
+            this.handleGlobalEmergencyStop();
+          }
+        }, (err) => console.warn('Settings realtime listener error:', err));
+    } catch (err) {
+      console.warn('Gagal memasang settings listener:', err);
+    }
+  },
+
+  _stopRealtimeSessionWatcher() {
+    if (this._sessionUnsub) { this._sessionUnsub(); this._sessionUnsub = null; }
+    if (this._settingsUnsub) { this._settingsUnsub(); this._settingsUnsub = null; }
+    if (this._heartbeatInterval) { clearInterval(this._heartbeatInterval); this._heartbeatInterval = null; }
+  },
+
+  /**
+   * Cadangan untuk mode demo lokal (localStorage, tanpa Firestore) yang
+   * tidak punya kemampuan realtime listener — tetap pakai cara lama.
+   */
+  _startPollingFallback() {
     if (this._heartbeatInterval) clearInterval(this._heartbeatInterval);
     this._heartbeatInterval = setInterval(async () => {
       if (!this.session) return;
@@ -44,7 +103,6 @@ const ExamSession = {
       if (!sessId) return;
 
       try {
-        // 1. Check Global Emergency Pause
         const isGlobalPaused = await window.DB.isGlobalExamPaused();
         if (isGlobalPaused) {
           clearInterval(this._heartbeatInterval);
@@ -52,8 +110,6 @@ const ExamSession = {
           return;
         }
 
-        // 2. Check Individual Session Termination (oleh admin ATAU otomatis
-        //    oleh sistem karena batas pelanggaran terlampaui)
         const currentStatus = await window.DB.checkSessionStatus(sessId);
         if (currentStatus === 'terminated') {
           clearInterval(this._heartbeatInterval);
@@ -67,6 +123,7 @@ const ExamSession = {
 
   handleGlobalEmergencyStop() {
     if (this.timer) this.timer.stop();
+    this._stopRealtimeSessionWatcher();
     if (window.SecurityGuard) SecurityGuard.isLocked = false;
     
     const fsOverlay = document.getElementById('fullscreenLockOverlay');
@@ -103,6 +160,7 @@ const ExamSession = {
 
   handleForcedTermination(customTitle, customMessage) {
     if (this.timer) this.timer.stop();
+    this._stopRealtimeSessionWatcher();
     if (window.SecurityGuard) SecurityGuard.isLocked = false;
     
     const fsOverlay = document.getElementById('fullscreenLockOverlay');
@@ -262,6 +320,7 @@ const ExamSession = {
       // Exit Token valid -> Unlock and finish!
       this.closeFinishModal();
       if (this.timer) this.timer.stop();
+      this._stopRealtimeSessionWatcher();
       if (window.SecurityGuard) SecurityGuard.isLocked = false;
       
       const fsOverlay = document.getElementById('fullscreenLockOverlay');
@@ -294,6 +353,7 @@ const ExamSession = {
 
   handleSessionExpired() {
     if (this.timer) this.timer.stop();
+    this._stopRealtimeSessionWatcher();
     if (this.session) {
       window.DB.updateSessionStatus(this.session.session_id, 'expired');
     }
