@@ -567,6 +567,23 @@
                   <input type="checkbox" id="toggleMenuKhusus" style="width: 18px; height: 18px;">
                   <span style="font-size: 0.925rem; font-weight: 600;">Aktifkan Menu Ujian Khusus</span>
                 </label>
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                  <input type="checkbox" id="toggleMenuNilai" style="width: 18px; height: 18px;">
+                  <span style="font-size: 0.925rem; font-weight: 600;">Aktifkan Menu Cek Nilai Ujian</span>
+                </label>
+              </div>
+
+              <div class="form-group" style="background: var(--bg-surface-muted); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.5rem;">
+                <label class="form-label" for="settingNilaiUrl" style="font-weight: 700; color: var(--primary-800);">
+                  📊 Link Cek Nilai Ujian
+                </label>
+                <input type="url" id="settingNilaiUrl" class="form-input" placeholder="https://..." autocomplete="off">
+                <div style="font-size:0.85rem; color:var(--text-muted); margin-top: 0.35rem;">
+                  Tombol "Cek Nilai" di halaman siswa akan membuka link ini di tab baru. Harus diawali https:// (atau http://). Tombol hanya muncul jika saklar di atas aktif.
+                </div>
+                <div style="font-size:0.8rem; color:var(--danger); margin-top: 0.35rem;">
+                  ⚠️ Siapa pun yang tahu link ini bisa membukanya. Untuk menjaga privasi nilai, gunakan halaman yang meminta NIS/NISN siswa dulu, jangan langsung menampilkan seluruh daftar nilai.
+                </div>
               </div>
 
               <div class="form-group" style="background: var(--bg-surface-muted); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.5rem;">
