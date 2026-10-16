@@ -1080,6 +1080,10 @@ const AdminController = {
     document.getElementById('toggleMenuRemedial').checked = settings.menu_remedial_enabled !== false;
     document.getElementById('toggleMenuTryout').checked = !!settings.menu_tryout_enabled;
     document.getElementById('toggleMenuKhusus').checked = !!settings.menu_khusus_enabled;
+    const nilaiToggleEl = document.getElementById('toggleMenuNilai');
+    if (nilaiToggleEl) nilaiToggleEl.checked = !!settings.menu_nilai_enabled;
+    const nilaiUrlEl = document.getElementById('settingNilaiUrl');
+    if (nilaiUrlEl) nilaiUrlEl.value = settings.nilai_url || '';
     
     const defMaxEl = document.getElementById('settingDefaultMaxViolations');
     if (defMaxEl) defMaxEl.value = settings.default_max_violations || 3;
@@ -1117,6 +1121,23 @@ const AdminController = {
     const defaultExitToken = (document.getElementById('settingDefaultExitToken')?.value || 'SELESAI').trim().toUpperCase();
     const defaultExamDuration = parseInt(document.getElementById('settingDefaultExamDuration')?.value, 10) || 60;
 
+    // Menu Cek Nilai: link wajib http(s) — blokir skema lain (mis. javascript:)
+    // supaya tombol di halaman siswa tidak bisa disalahgunakan.
+    const menuNilai = !!document.getElementById('toggleMenuNilai')?.checked;
+    let nilaiUrl = (document.getElementById('settingNilaiUrl')?.value || '').trim();
+    if (nilaiUrl) {
+      let parsed = null;
+      try { parsed = new URL(nilaiUrl); } catch (e) { parsed = null; }
+      if (!parsed || (parsed.protocol !== 'https:' && parsed.protocol !== 'http:')) {
+        Utils.showToast('Link Tidak Valid', 'Link Cek Nilai harus diawali https:// (atau http://).', 'error');
+        return;
+      }
+      nilaiUrl = parsed.href;
+    } else if (menuNilai) {
+      Utils.showToast('Link Kosong', 'Isi Link Cek Nilai dulu, atau matikan saklar Menu Cek Nilai.', 'error');
+      return;
+    }
+
     await window.DB.saveSettings({
       academic_year: academicYear,
       semester: semester,
@@ -1126,7 +1147,9 @@ const AdminController = {
       menu_khusus_enabled: menuKhusus,
       default_max_violations: defaultMaxViolations,
       default_exit_token: defaultExitToken,
-      default_exam_duration_minutes: defaultExamDuration
+      default_exam_duration_minutes: defaultExamDuration,
+      menu_nilai_enabled: menuNilai,
+      nilai_url: nilaiUrl
     });
 
     Utils.showToast('Berhasil', 'Pengaturan portal dan batas pelanggaran berhasil diperbarui!', 'success');
