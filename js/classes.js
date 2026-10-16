@@ -61,6 +61,24 @@ const ClassesManager = {
         </button>
       `;
     }
+    // Menu Cek Nilai: tombol tautan ke link buatan Admin (tab baru).
+    // Dicek lagi di sini (bukan hanya saat disimpan) — hanya http/https.
+    if (this.settings.menu_nilai_enabled && this.settings.nilai_url) {
+      let nilaiHref = '';
+      try {
+        const u = new URL(this.settings.nilai_url);
+        if (u.protocol === 'https:' || u.protocol === 'http:') {
+          nilaiHref = u.href.replace(/"/g, '%22');
+        }
+      } catch (e) { nilaiHref = ''; }
+      if (nilaiHref) {
+        specialTabs += `
+        <a class="btn btn-sm btn-secondary" href="${nilaiHref}" target="_blank" rel="noopener noreferrer">
+          📊 Cek Nilai Ujian
+        </a>
+      `;
+      }
+    }
 
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 0.85rem; width: 100%;">
