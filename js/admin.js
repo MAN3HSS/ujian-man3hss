@@ -62,6 +62,7 @@ const AdminController = {
     if (tabName === 'students') this.renderStudentsTable();
     if (tabName === 'attendance') this.renderAttendanceTable();
     if (tabName === 'settings') this.loadSettingsForm();
+    if (tabName === 'complaints' && window.ComplaintsManager) ComplaintsManager.renderAdminTable();
     if (tabName === 'monitoring' && window.MonitoringManager) {
       MonitoringManager.renderActiveSessionsTable();
       MonitoringManager.renderViolationsTable();
@@ -90,9 +91,9 @@ const AdminController = {
       const isActive = exam.status === 'active';
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td style="font-weight:700;">${exam.title}</td>
-        <td>${exam.subject}</td>
-        <td><span class="badge ${exam.type === 'Ujian Susulan' ? 'badge-accent' : 'badge-primary'}">${exam.type}</span></td>
+        <td style="font-weight:700;">${Utils.escapeHtml(exam.title)}</td>
+        <td>${Utils.escapeHtml(exam.subject)}</td>
+        <td><span class="badge ${exam.type === 'Ujian Susulan' ? 'badge-accent' : 'badge-primary'}">${Utils.escapeHtml(exam.type)}</span></td>
         <td>${exam.duration_minutes} Menit</td>
         <td>
           <span class="badge ${isActive ? 'badge-success' : 'badge-danger'}">
@@ -158,7 +159,7 @@ const AdminController = {
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>
-          <div style="font-weight: 700; color:var(--text-main);">${exam.title}</div>
+          <div style="font-weight: 700; color:var(--text-main);">${Utils.escapeHtml(exam.title)}</div>
           <div style="font-size: 0.775rem; color: var(--text-muted); margin-top: 2px;">
             🔑 Masuk: <strong style="color:var(--primary-700); font-family:var(--font-mono);">${exam.token_masuk_plain || 'Terkonfigurasi'}</strong> | 
             🚪 Keluar: <strong style="color:var(--danger); font-family:var(--font-mono);">${exam.token_keluar_plain || 'SELESAI'}</strong>
@@ -166,9 +167,9 @@ const AdminController = {
         </td>
         <td style="font-family:var(--font-mono); font-size:0.825rem;">
           <div>📅 ${dateText}</div>
-          <div style="font-size:0.75rem; color:var(--text-muted);">${exam.subject}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">${Utils.escapeHtml(exam.subject)}</div>
         </td>
-        <td><span class="badge ${exam.type === 'Ujian Susulan' ? 'badge-accent' : 'badge-primary'}">${exam.type}</span></td>
+        <td><span class="badge ${exam.type === 'Ujian Susulan' ? 'badge-accent' : 'badge-primary'}">${Utils.escapeHtml(exam.type)}</span></td>
         <td>${exam.duration_minutes}m</td>
         <td>
           <button class="btn btn-sm ${isActive ? 'btn-primary' : 'btn-danger'}" 
@@ -884,12 +885,12 @@ const AdminController = {
       row.innerHTML = `
         <td style="text-align:center; font-weight:700; color:var(--text-subtle);">${idx + 1}</td>
         <td>
-          <div style="font-weight: 800; color: var(--text-main);">${s.student_name || 'Peserta Ujian'}</div>
-          <div style="font-size: 0.775rem; font-family: var(--font-mono); color: var(--primary-700);">No: ${s.student_number || '-'}</div>
+          <div style="font-weight: 800; color: var(--text-main);">${Utils.escapeHtml(s.student_name || 'Peserta Ujian')}</div>
+          <div style="font-size: 0.775rem; font-family: var(--font-mono); color: var(--primary-700);">No: ${Utils.escapeHtml(s.student_number || '-')}</div>
         </td>
-        <td><span class="badge badge-accent">${s.class_name || '-'}</span></td>
+        <td><span class="badge badge-accent">${Utils.escapeHtml(s.class_name || '-')}</span></td>
         <td>
-          <div style="font-weight: 700; font-size: 0.875rem;">${s.exam_title || 'Ujian'}</div>
+          <div style="font-weight: 700; font-size: 0.875rem;">${Utils.escapeHtml(s.exam_title || 'Ujian')}</div>
         </td>
         <td style="font-family: var(--font-mono); font-size: 0.85rem;">${Utils.formatTime(s.started_at)}</td>
         <td style="font-family: var(--font-mono); font-size: 0.825rem;">${timeText}</td>
@@ -1080,6 +1081,8 @@ const AdminController = {
     document.getElementById('toggleMenuRemedial').checked = settings.menu_remedial_enabled !== false;
     document.getElementById('toggleMenuTryout').checked = !!settings.menu_tryout_enabled;
     document.getElementById('toggleMenuKhusus').checked = !!settings.menu_khusus_enabled;
+    const pengaduanToggleEl = document.getElementById('toggleMenuPengaduan');
+    if (pengaduanToggleEl) pengaduanToggleEl.checked = settings.menu_pengaduan_enabled !== false;
     const nilaiToggleEl = document.getElementById('toggleMenuNilai');
     if (nilaiToggleEl) nilaiToggleEl.checked = !!settings.menu_nilai_enabled;
     const nilaiUrlEl = document.getElementById('settingNilaiUrl');
@@ -1149,6 +1152,7 @@ const AdminController = {
       default_exit_token: defaultExitToken,
       default_exam_duration_minutes: defaultExamDuration,
       menu_nilai_enabled: menuNilai,
+      menu_pengaduan_enabled: !!document.getElementById('toggleMenuPengaduan')?.checked,
       nilai_url: nilaiUrl
     });
 
