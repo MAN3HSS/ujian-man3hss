@@ -195,6 +195,25 @@ class FirebaseService {
   /* ============================================================
      STUDENTS
   ============================================================ */
+  /**
+   * Urutan siswa: KELAS dulu (X, XI, XII, lalu A-Z / angka di nama kelas),
+   * baru NAMA siswa A-Z di dalam tiap kelas.
+   */
+  _classRank(name) {
+    const m = String(name || '').trim().match(/^(XII|XI|X)(?![A-Za-z])/i);
+    if (!m) return 99; // nama kelas tanpa jenjang romawi diletakkan di akhir
+    return { X: 1, XI: 2, XII: 3 }[m[1].toUpperCase()];
+  }
+
+  _compareStudents(a, b) {
+    const opts = { numeric: true, sensitivity: 'base' };
+    const rankDiff = this._classRank(a.class_name) - this._classRank(b.class_name);
+    if (rankDiff !== 0) return rankDiff;
+    const classDiff = String(a.class_name || '').localeCompare(String(b.class_name || ''), 'id', opts);
+    if (classDiff !== 0) return classDiff;
+    return String(a.full_name || '').localeCompare(String(b.full_name || ''), 'id', opts);
+  }
+
   async getStudents(classId = null, grade = null) {
     if (!this.isLive) {
       let students = StorageManager.get('db_students', []);
@@ -205,7 +224,7 @@ class FirebaseService {
         const gradeClassIds = classes.filter(c => c.grade === grade).map(c => c.id);
         students = students.filter(s => gradeClassIds.includes(s.class_id));
       }
-      students.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || '', 'id', { numeric: true, sensitivity: 'base' }));
+      students.sort((a, b) => this._compareStudents(a, b));
       return students;
     }
 
@@ -222,7 +241,7 @@ class FirebaseService {
       students = students.filter(s => gradeClassIds.includes(s.class_id));
     }
 
-    students.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || '', 'id', { numeric: true, sensitivity: 'base' }));
+    students.sort((a, b) => this._compareStudents(a, b));
     return students;
   }
 
