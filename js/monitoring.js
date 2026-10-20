@@ -46,12 +46,12 @@ const MonitoringManager = {
       row.innerHTML = `
         <td style="text-align:center; font-weight:700; color:var(--text-subtle);">${idx + 1}</td>
         <td>
-          <div style="font-weight: 800; color: var(--text-main);">${sess.student_name || 'Peserta Ujian'}</div>
-          <div style="font-size: 0.775rem; font-family: var(--font-mono); color: var(--primary-700);">No: ${sess.student_number || '-'}</div>
+          <div style="font-weight: 800; color: var(--text-main);">${Utils.escapeHtml(sess.student_name || 'Peserta Ujian')}</div>
+          <div style="font-size: 0.775rem; font-family: var(--font-mono); color: var(--primary-700);">No: ${Utils.escapeHtml(sess.student_number || '-')}</div>
         </td>
-        <td><span class="badge badge-accent">${sess.class_name || '-'}</span></td>
-        <td><div style="font-weight: 700; font-size: 0.85rem;">${sess.exam_title || 'Ujian'}</div></td>
-        <td><span class="badge badge-neutral">${sess.device_type || 'Desktop'}</span></td>
+        <td><span class="badge badge-accent">${Utils.escapeHtml(sess.class_name || '-')}</span></td>
+        <td><div style="font-weight: 700; font-size: 0.85rem;">${Utils.escapeHtml(sess.exam_title || 'Ujian')}</div></td>
+        <td><span class="badge badge-neutral">${Utils.escapeHtml(sess.device_type || 'Desktop')}</span></td>
         <td style="font-family: var(--font-mono); font-size: 0.825rem;">${Utils.formatTime(sess.started_at)}</td>
         <td style="font-family: var(--font-mono); font-size: 0.825rem;">${Utils.formatTime(sess.expires_at)}</td>
         <td style="text-align:center;">
@@ -207,14 +207,14 @@ const MonitoringManager = {
         <td style="text-align:center; font-weight:700; color:var(--text-subtle);">${idx + 1}</td>
         <td style="font-family: var(--font-mono); font-size: 0.825rem; white-space: nowrap;">${dateFormatted}</td>
         <td>
-          <div style="font-weight: 800; color: var(--text-main);">${v.student_name || 'Peserta Ujian'}</div>
-          <div style="font-size: 0.775rem; font-family: var(--font-mono); color: var(--primary-700);">No: ${v.student_number || '-'}</div>
+          <div style="font-weight: 800; color: var(--text-main);">${Utils.escapeHtml(v.student_name || 'Peserta Ujian')}</div>
+          <div style="font-size: 0.775rem; font-family: var(--font-mono); color: var(--primary-700);">No: ${Utils.escapeHtml(v.student_number || '-')}</div>
         </td>
-        <td><span class="badge badge-accent">${v.class_name || '-'}</span></td>
-        <td><code style="background:var(--bg-surface-muted); padding:0.2rem 0.4rem; border-radius:var(--radius-sm);">${v.event_type}</code></td>
-        <td><span class="badge ${sevBadge}">${v.severity}</span></td>
-        <td style="font-size: 0.8rem; color: var(--text-muted); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${metaText}">
-          ${metaText || '-'}
+        <td><span class="badge badge-accent">${Utils.escapeHtml(v.class_name || '-')}</span></td>
+        <td><code style="background:var(--bg-surface-muted); padding:0.2rem 0.4rem; border-radius:var(--radius-sm);">${Utils.escapeHtml(v.event_type)}</code></td>
+        <td><span class="badge ${sevBadge}">${Utils.escapeHtml(v.severity)}</span></td>
+        <td style="font-size: 0.8rem; color: var(--text-muted); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${Utils.escapeHtml(metaText)}">
+          ${Utils.escapeHtml(metaText || '-')}
         </td>
         <td>
           <button class="btn btn-sm btn-outline" style="color:var(--danger); border-color:var(--danger);" onclick="MonitoringManager.deleteViolation('${v.id}')" title="Hapus catatan pelanggaran ini">
