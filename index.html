@@ -107,6 +107,10 @@
           <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-4h-4m4 0v-4m6-4V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3a1 1 0 001 1h4a1 1 0 001-1zM4 8V4a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1zm0 12v-3a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1z" /></svg>
           SCAN BARCODE / LINK UJIAN
         </button>
+        <button type="button" id="btnOpenComplaint" class="btn btn-secondary btn-lg" style="display:none;" onclick="ComplaintsManager.openModal()">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>
+          PENGADUAN
+        </button>
       </div>
     </div>
   </section>
@@ -312,6 +316,53 @@
     </div>
   </div>
 
+  <!-- MODAL: Pengaduan Siswa -->
+  <div id="complaintModal" class="modal-backdrop">
+    <div class="modal-container" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title">📢 PENGADUAN</h3>
+        <button class="modal-close" onclick="ComplaintsManager.closeModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div id="complaintFormArea">
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Laporkan dugaan kecurangan atau pelanggaran saat ujian. Identitas pelapor tidak dicatat. Isi dengan jujur dan sopan; laporan akan dibaca oleh proktor.
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="complaintSuspectedName">NAMA PESERTA DIDIK YANG DICURIGAI</label>
+            <input type="text" id="complaintSuspectedName" class="form-input" maxlength="100" placeholder="Tulis nama peserta didik" autocomplete="off">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="complaintRoom">RUANG</label>
+            <input type="text" id="complaintRoom" class="form-input" maxlength="50" placeholder="Contoh: Ruang 5" autocomplete="off">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="complaintDescription">DESKRIPSI KECURIGAAN ANDA</label>
+            <textarea id="complaintDescription" class="form-input" maxlength="1000" rows="5" style="min-height: 120px; resize: vertical;" placeholder="Ceritakan apa yang Anda lihat" oninput="ComplaintsManager._updateCounter()"></textarea>
+            <div id="complaintDescCounter" style="text-align:right; font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">0/1000</div>
+          </div>
+
+          <div id="complaintErrorMsg" style="display: none; padding: 0.75rem 1rem; border-radius: var(--radius-md); background: var(--danger-bg); color: var(--danger); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.75rem; text-align: center;"></div>
+        </div>
+
+        <div id="complaintSuccessArea" style="display:none; text-align:center; padding: 1.5rem 0.5rem;">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">✅</div>
+          <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 0.4rem;">Pengaduan Terkirim</div>
+          <div style="font-size: 0.875rem; color: var(--text-muted);">Terima kasih. Laporan Anda akan ditindaklanjuti oleh proktor.</div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; gap: 0.75rem;">
+        <button class="btn btn-secondary" style="flex:1;" onclick="ComplaintsManager.closeModal()">Tutup</button>
+        <button id="btnSubmitComplaint" class="btn btn-primary" style="flex:2;" onclick="ComplaintsManager.submit()">KIRIM PENGADUAN</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: Device Diagnostic & Exam Rules Confirmation -->
   <div id="confirmModal" class="modal-backdrop">
     <div class="modal-container">
@@ -429,6 +480,7 @@
   <script src="js/firebase-client.js"></script>
   <script src="js/classes.js"></script>
   <script src="js/exams.js"></script>
+  <script src="js/complaints.js"></script>
   <script src="js/app.js"></script>
   <script>
     // Jika halaman dibuka lewat link ujian (?ujian=ID), otomatis buka
