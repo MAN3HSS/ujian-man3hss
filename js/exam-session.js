@@ -231,7 +231,8 @@ const ExamSession = {
     const frameContainer = document.getElementById('examFrameContainer');
     if (!frameContainer) return;
 
-    const formUrl = this.session.form_url;
+    // Hanya http/https & di-escape: form_url berasal dari data yang bisa dibuat publik.
+    const formUrl = Utils.escapeHtml(Utils.safeHttpUrl(this.session.form_url));
     const allowIframe = this.session.allow_iframe !== false;
 
     if (allowIframe && formUrl) {
