@@ -5,6 +5,33 @@
 
 const Utils = {
   /**
+   * Escape teks sebelum disisipkan ke innerHTML. WAJIB dipakai untuk setiap
+   * teks yang berasal dari pengguna (nama, deskripsi, judul, dll) supaya
+   * tidak bisa dipakai menyisipkan kode ke halaman admin/siswa.
+   */
+  escapeHtml(value) {
+    return String(value === null || value === undefined ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  },
+
+  /**
+   * Kembalikan URL jika berskema http/https saja; selain itu '' (menolak
+   * javascript:, data:, dll).
+   */
+  safeHttpUrl(url) {
+    try {
+      const u = new URL(String(url || '').trim());
+      return (u.protocol === 'https:' || u.protocol === 'http:') ? u.href : '';
+    } catch (e) {
+      return '';
+    }
+  },
+
+  /**
    * Format ISO string or Date to Indonesian localized string with WITA timezone
    */
   formatDateTime(dateInput, includeTime = true) {
