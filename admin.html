@@ -77,6 +77,12 @@
           <span>Log Pelanggaran</span>
         </button>
 
+        <button class="sidebar-item" data-tab="complaints">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>
+          <span>Hasil Pengaduan</span>
+          <span id="complaintNewBadge" class="badge badge-danger" style="display:none; margin-left:auto; font-size:0.7rem;">0</span>
+        </button>
+
         <div class="sidebar-section-title">SISTEM</div>
         <button class="sidebar-item" data-tab="settings">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
@@ -518,6 +524,54 @@
           </div>
         </div>
 
+        <!-- TAB: HASIL PENGADUAN -->
+        <div id="tab-complaints" class="admin-tab-content" style="display: none;">
+          <div class="admin-page-header">
+            <div>
+              <h1 class="admin-page-title">Hasil Pengaduan Siswa</h1>
+              <p class="admin-page-subtitle">Laporan dugaan kecurangan yang dikirim siswa lewat menu Pengaduan. Identitas pelapor tidak dicatat.</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-sm btn-secondary" onclick="ComplaintsManager.renderAdminTable()">
+                🔄 Muat Ulang
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="ComplaintsManager.removeAll()">
+                🗑️ Hapus Semua Pengaduan
+              </button>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom: 1.25rem; padding: 1rem 1.25rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+            <input type="text" id="complaintSearchInput" class="form-input" style="max-width: 280px;" placeholder="🔍 Cari nama / ruang / isi laporan..." oninput="ComplaintsManager.renderAdminTable()">
+            <select id="complaintStatusFilter" class="form-select" style="max-width: 220px;" onchange="ComplaintsManager.renderAdminTable()">
+              <option value="">Semua Status</option>
+              <option value="baru">Belum Ditindaklanjuti</option>
+              <option value="selesai">Sudah Ditindaklanjuti</option>
+            </select>
+            <button class="btn btn-sm btn-secondary" onclick="ComplaintsManager.resetFilters()">Reset Filter</button>
+            <span id="complaintCountText" style="margin-left:auto; font-size:0.85rem; font-weight:600; color:var(--text-muted);"></span>
+          </div>
+
+          <div class="card" style="padding: 0; overflow: hidden;">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width: 45px;">No</th>
+                    <th>Waktu (WITA)</th>
+                    <th>Peserta Didik yang Dicurigai</th>
+                    <th>Ruang</th>
+                    <th>Deskripsi Kecurigaan</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="complaintsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <!-- TAB 8: PENGATURAN PORTAL -->
         <div id="tab-settings" class="admin-tab-content" style="display: none;">
           <div class="admin-page-header">
@@ -570,6 +624,10 @@
                 <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
                   <input type="checkbox" id="toggleMenuNilai" style="width: 18px; height: 18px;">
                   <span style="font-size: 0.925rem; font-weight: 600;">Aktifkan Menu Cek Nilai Ujian</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                  <input type="checkbox" id="toggleMenuPengaduan" style="width: 18px; height: 18px;">
+                  <span style="font-size: 0.925rem; font-weight: 600;">Aktifkan Menu Pengaduan Siswa</span>
                 </label>
               </div>
 
@@ -932,6 +990,7 @@
   <script src="js/firebase-client.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/monitoring.js"></script>
+  <script src="js/complaints.js"></script>
   <script src="js/admin.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
