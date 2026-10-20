@@ -958,6 +958,88 @@ class FirebaseService {
     return true;
   }
 
+  /* ============================================================
+     PENGADUAN SISWA
+  ============================================================ */
+  async submitComplaint(data) {
+    const clean = {
+      suspected_name: String(data.suspected_name || '').trim().slice(0, 100),
+      room: String(data.room || '').trim().slice(0, 50),
+      description: String(data.description || '').trim().slice(0, 1000),
+      status: 'baru'
+    };
+    if (!clean.suspected_name || !clean.room || !clean.description) {
+      throw new Error('Semua kolom wajib diisi.');
+    }
+
+    if (!this.isLive) {
+      const list = StorageManager.get('db_complaints', []);
+      list.unshift({ id: `c_${Date.now()}`, ...clean, created_at: new Date().toISOString() });
+      StorageManager.set('db_complaints', list);
+      return true;
+    }
+
+    // created_at memakai waktu SERVER (tidak bisa dipalsukan dari perangkat siswa)
+    await this._col('complaints').add({
+      ...clean,
+      created_at: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    return true;
+  }
+
+  _complaintTime(c) {
+    const t = c && c.created_at;
+    if (!t) return 0;
+    if (typeof t.toMillis === 'function') return t.toMillis();
+    const ms = new Date(t).getTime();
+    return isNaN(ms) ? 0 : ms;
+  }
+
+  async getComplaints() {
+    const list = this.isLive
+      ? await this._getAllDocs('complaints')
+      : StorageManager.get('db_complaints', []);
+    list.sort((a, b) => this._complaintTime(b) - this._complaintTime(a));
+    return list;
+  }
+
+  async updateComplaintStatus(id, status) {
+    if (!this.isLive) {
+      const list = StorageManager.get('db_complaints', []);
+      const item = list.find(c => c.id === id);
+      if (item) item.status = status;
+      StorageManager.set('db_complaints', list);
+      return true;
+    }
+    await this._col('complaints').doc(id).update({ status });
+    return true;
+  }
+
+  async deleteComplaint(id) {
+    if (!this.isLive) {
+      StorageManager.set('db_complaints', StorageManager.get('db_complaints', []).filter(c => c.id !== id));
+      return true;
+    }
+    await this._col('complaints').doc(id).delete();
+    return true;
+  }
+
+  async deleteAllComplaints() {
+    if (!this.isLive) {
+      StorageManager.set('db_complaints', []);
+      return true;
+    }
+    // Hapus per 400 dokumen (batas Firestore 500 operasi per batch)
+    const snap = await this._col('complaints').get();
+    const docs = snap.docs;
+    for (let i = 0; i < docs.length; i += 400) {
+      const batch = this.db.batch();
+      docs.slice(i, i + 400).forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    }
+    return true;
+  }
+
   async clearAllViolations() {
     if (!this.isLive) {
       StorageManager.set('db_violations', []);
