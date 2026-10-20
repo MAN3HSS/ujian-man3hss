@@ -92,11 +92,11 @@ const ExamsManager = {
       card.innerHTML = `
         <div>
           <div class="exam-card-header">
-            <span class="badge ${typeBadgeClass}">${exam.type || 'Ujian Utama'}</span>
+            <span class="badge ${typeBadgeClass}">${Utils.escapeHtml(exam.type || 'Ujian Utama')}</span>
             ${statusBadge}
           </div>
-          <div class="exam-card-subject">${exam.subject || 'Mata Pelajaran'}</div>
-          <h3 class="exam-card-title">${exam.title}</h3>
+          <div class="exam-card-subject">${Utils.escapeHtml(exam.subject || 'Mata Pelajaran')}</div>
+          <h3 class="exam-card-title">${Utils.escapeHtml(exam.title)}</h3>
           <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1rem;">
             ${exam.description || 'Silakan ikuti instruksi pengawas dan pastikan koneksi stabil.'}
           </p>
@@ -539,7 +539,11 @@ const ExamsManager = {
       } catch (err) {
         console.error('Auto-create exam from link failed:', err);
         if (findBtn) { findBtn.disabled = false; findBtn.textContent = 'Cari Ujian'; }
-        if (errEl) { errEl.textContent = `Gagal membuat ujian otomatis: ${err.message || 'Terjadi kesalahan'}`; errEl.style.display = 'block'; }
+        const denied = err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));
+        const msg = denied
+          ? 'Link ini tidak dikenali sebagai link Google Form (harus berawalan docs.google.com/forms atau forms.gle). Periksa kembali link-nya.'
+          : `Gagal membuat ujian otomatis: ${err.message || 'Terjadi kesalahan'}`;
+        if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
         return;
       }
     }
