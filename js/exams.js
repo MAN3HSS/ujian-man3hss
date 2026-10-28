@@ -168,6 +168,13 @@ const ExamsManager = {
     const errEl = document.getElementById('tokenErrorMsg');
     if (errEl) errEl.style.display = 'none';
 
+    // Alur 2 langkah: mulai dari langkah 1 (kelas + nomor peserta)
+    this.verifiedStudent = null;
+    const numberInput = document.getElementById('studentNumberInput');
+    if (numberInput) numberInput.value = '';
+    this._setTokenStep('identity');
+    this._bindTokenModalKeys();
+
     // Populate Class Dropdown in Modal (Filtered by active grade only)
     const classSelect = document.getElementById('studentClassSelect');
     if (classSelect) {
@@ -185,66 +192,73 @@ const ExamsManager = {
         classSelect.innerHTML += `<option value="${c.id}" data-name="${c.name}" ${isSelected ? 'selected' : ''}>${c.name}</option>`;
       });
 
-      // Trigger student population for default selected class
-      await this.onModalClassChange();
     }
 
     modalBackdrop.classList.add('active');
   },
 
-  /**
-   * Triggered when student selects a Class in modal -> Loads only students from that class
-   */
-  async onModalClassChange() {
-    const classSelect = document.getElementById('studentClassSelect');
-    const studentSelect = document.getElementById('studentNameSelect');
-    const badge = document.getElementById('studentNumberBadge');
-    if (!classSelect || !studentSelect) return;
+  /* --------------------------------------------------------------------------
+     MASUK UJIAN 2 LANGKAH
+     Langkah 1: pilih kelas + ketik Nomor Peserta (No. Ujian) -> VERIFIKASI NOMOR
+     Langkah 2: (hanya setelah nomor benar) masukkan Token Masuk -> lanjut
+  -------------------------------------------------------------------------- */
+  verifiedStudent: null,
+  _tokenKeysBound: false,
 
-    const classId = classSelect.value;
-    if (badge) badge.style.display = 'none';
-
-    if (!classId) {
-      studentSelect.innerHTML = `<option value="">-- Pilih Kelas Terlebih Dahulu --</option>`;
-      return;
-    }
-
-    studentSelect.innerHTML = `<option value="">Memuat nama siswa...</option>`;
-    const students = await window.DB.getStudents(classId);
-
-    if (!students || students.length === 0) {
-      studentSelect.innerHTML = `
-        <option value="">-- Belum ada data siswa di kelas ini --</option>
-      `;
-      return;
-    }
-
-    studentSelect.innerHTML = `<option value="">-- Pilih Nama Anda --</option>`;
-    students.forEach(st => {
-      // Show ONLY student name in the option text
-      studentSelect.innerHTML += `
-        <option value="${st.full_name}" data-number="${st.student_number || '-'}">
-          ${st.full_name}
-        </option>
-      `;
-    });
+  _normalizeNumber(value) {
+    return String(value === null || value === undefined ? '' : value)
+      .trim().toUpperCase().replace(/\s+/g, '');
   },
 
-  onStudentNameChange() {
-    const studentSelect = document.getElementById('studentNameSelect');
-    const badge = document.getElementById('studentNumberBadge');
-    const numText = document.getElementById('studentNumberText');
-    if (!studentSelect || !badge) return;
-
-    const opt = studentSelect.options[studentSelect.selectedIndex];
-    const studentNumber = opt ? opt.dataset.number : '';
-
-    if (studentSelect.value && studentNumber && studentNumber !== '-') {
-      if (numText) numText.textContent = studentNumber;
-      badge.style.display = 'block';
+  _showTokenError(msg) {
+    const el = document.getElementById('tokenErrorMsg');
+    if (!el) return;
+    if (msg) {
+      el.textContent = msg;
+      el.style.display = 'block';
     } else {
-      badge.style.display = 'none';
+      el.style.display = 'none';
     }
+  },
+
+  _setTokenStep(step) {
+    const isToken = step === 'token';
+    const show = (id, on) => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = on ? '' : 'none';
+    };
+    show('identityStepArea', !isToken);
+    show('tokenStepArea', isToken);
+    show('btnTokenCancel', !isToken);
+    show('btnVerifyNumber', !isToken);
+    show('btnBackToIdentity', isToken);
+    show('btnVerifyToken', isToken);
+    this._showTokenError('');
+  },
+
+  _bindTokenModalKeys() {
+    if (this._tokenKeysBound) return;
+    this._tokenKeysBound = true;
+    const numberEl = document.getElementById('studentNumberInput');
+    const tokenEl = document.getElementById('tokenInput');
+    if (numberEl) {
+      numberEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); this.verifyStudentNumber(); }
+      });
+    }
+    if (tokenEl) {
+      tokenEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); this.submitTokenVerification(); }
+      });
+    }
+  },
+
+  /**
+   * Ganti kelas = verifikasi nomor harus diulang.
+   */
+  onModalClassChange() {
+    this.verifiedStudent = null;
+    this._setTokenStep('identity');
   },
 
   closeTokenModal() {
@@ -253,76 +267,121 @@ const ExamsManager = {
   },
 
   /**
-   * Verify Student Identity, Class & Entry Token
+   * Langkah 1: cocokkan Nomor Peserta yang diketik dengan data siswa di
+   * kelas yang dipilih (data dari menu Admin > Data Siswa & No Peserta).
+   */
+  async verifyStudentNumber() {
+    const classSelect = document.getElementById('studentClassSelect');
+    const classId = classSelect ? classSelect.value : '';
+    const className = classSelect && classSelect.selectedIndex > 0
+      ? (classSelect.options[classSelect.selectedIndex].dataset.name || classSelect.options[classSelect.selectedIndex].text)
+      : '';
+    const numberEl = document.getElementById('studentNumberInput');
+    const typed = this._normalizeNumber(numberEl ? numberEl.value : '');
+
+    if (!classId) {
+      this._showTokenError('Harap pilih Kelas Anda terlebih dahulu.');
+      return;
+    }
+    if (!typed) {
+      this._showTokenError('Harap masukkan Nomor Peserta Anda.');
+      return;
+    }
+    this._showTokenError('');
+
+    const btn = document.getElementById('btnVerifyNumber');
+    if (btn) { btn.disabled = true; btn.textContent = 'Memeriksa...'; }
+
+    try {
+      const students = await window.DB.getStudents(classId);
+      const found = (students || []).find(st => {
+        const n = this._normalizeNumber(st.student_number);
+        return n && n !== '-' && n === typed;
+      });
+
+      if (!found) {
+        this._showTokenError('Nomor peserta tidak ditemukan di kelas ini. Periksa kembali kelas dan nomor Anda, atau hubungi proktor.');
+        return;
+      }
+
+      this.verifiedStudent = {
+        full_name: found.full_name,
+        student_number: found.student_number,
+        class_id: classId,
+        class_name: className
+      };
+
+      const nameEl = document.getElementById('verifiedStudentName');
+      const metaEl = document.getElementById('verifiedStudentMeta');
+      if (nameEl) nameEl.textContent = found.full_name || '';
+      if (metaEl) metaEl.textContent = `${className} • No. Peserta ${found.student_number}`;
+
+      const tokenEl = document.getElementById('tokenInput');
+      if (tokenEl) tokenEl.value = '';
+      this._setTokenStep('token');
+      if (tokenEl) tokenEl.focus();
+    } catch (err) {
+      console.error('verifyStudentNumber error:', err);
+      this._showTokenError('Gagal memeriksa nomor peserta. Periksa koneksi internet lalu coba lagi.');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'VERIFIKASI NOMOR'; }
+    }
+  },
+
+  /**
+   * Kembali ke langkah 1 (mis. salah ketik nomor / salah orang).
+   */
+  backToIdentityStep() {
+    this.verifiedStudent = null;
+    const tokenEl = document.getElementById('tokenInput');
+    if (tokenEl) tokenEl.value = '';
+    this._setTokenStep('identity');
+  },
+
+  /**
+   * Langkah 2: verifikasi Token Masuk (hanya bisa setelah nomor terverifikasi).
    */
   async submitTokenVerification() {
-    const classSelect = document.getElementById('studentClassSelect');
-    const classId = classSelect ? classSelect.value : null;
-    const className = classSelect && classSelect.selectedIndex > 0 ? (classSelect.options[classSelect.selectedIndex].dataset.name || classSelect.options[classSelect.selectedIndex].text) : '';
-
-    const studentSelect = document.getElementById('studentNameSelect');
-    const studentName = studentSelect ? studentSelect.value.trim() : '';
-    const studentNumber = studentSelect && studentSelect.selectedIndex > 0 ? (studentSelect.options[studentSelect.selectedIndex].dataset.number || '-') : '-';
+    const v = this.verifiedStudent;
+    if (!v) {
+      this._setTokenStep('identity');
+      this._showTokenError('Verifikasi Nomor Peserta Anda terlebih dahulu.');
+      return;
+    }
 
     const tokenEl = document.getElementById('tokenInput');
     const tokenInput = tokenEl ? tokenEl.value.trim() : '';
-
-    const errorEl = document.getElementById('tokenErrorMsg');
-
-    if (!classId) {
-      if (errorEl) {
-        errorEl.textContent = 'Harap pilih Kelas Anda terlebih dahulu.';
-        errorEl.style.display = 'block';
-      }
-      return;
-    }
-
-    if (!studentName) {
-      if (errorEl) {
-        errorEl.textContent = 'Harap pilih Nama & Nomor Peserta Anda.';
-        errorEl.style.display = 'block';
-      }
-      return;
-    }
-
     if (!tokenInput) {
-      if (errorEl) {
-        errorEl.textContent = 'Harap masukkan Token Masuk Ujian.';
-        errorEl.style.display = 'block';
-      }
+      this._showTokenError('Harap masukkan Token Masuk Ujian.');
       return;
     }
-
-    if (errorEl) errorEl.style.display = 'none';
+    this._showTokenError('');
 
     const verifyBtn = document.getElementById('btnVerifyToken');
     if (verifyBtn) {
       verifyBtn.disabled = true;
-      verifyBtn.innerHTML = `Memverifikasi...`;
+      verifyBtn.textContent = 'Memverifikasi...';
     }
 
     try {
       const result = await window.DB.verifyTokenAndStartSession(
         this.selectedExam.id,
         tokenInput,
-        studentName,
-        classId,
-        className,
-        studentNumber
+        v.full_name,
+        v.class_id,
+        v.class_name,
+        v.student_number
       );
 
       if (!result.success) {
-        if (errorEl) {
-          errorEl.textContent = result.message || 'Token Masuk salah.';
-          errorEl.style.display = 'block';
-        }
+        this._showTokenError(result.message || 'Token Masuk salah.');
         Utils.showToast('Verifikasi Gagal', result.message || 'Token tidak valid', 'error');
         return;
       }
 
       // Save active session in StorageManager
       StorageManager.saveActiveSession(result);
-      
+
       // Close Token Modal
       this.closeTokenModal();
 
@@ -330,14 +389,11 @@ const ExamsManager = {
       this.openConfirmationModal(result);
     } catch (err) {
       console.error('Token verification error:', err);
-      if (errorEl) {
-        errorEl.textContent = `Terjadi kesalahan: ${err.message || 'Gagal memverifikasi'}`;
-        errorEl.style.display = 'block';
-      }
+      this._showTokenError(`Terjadi kesalahan: ${err.message || 'Gagal memverifikasi'}`);
     } finally {
       if (verifyBtn) {
         verifyBtn.disabled = false;
-        verifyBtn.innerHTML = `VERIFIKASI & LANJUT`;
+        verifyBtn.textContent = 'VERIFIKASI TOKEN & LANJUT';
       }
     }
   },
