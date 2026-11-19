@@ -377,7 +377,7 @@ class FirebaseService {
      SESSION & TOKEN VERIFICATION
   ============================================================ */
   async verifyTokenAndStartSession(examId, tokenInput, studentName, classId, className, studentNumber = '') {
-    const preCheck = await this._preSessionCheck(examId, studentName, studentNumber);
+    const preCheck = await this._preSessionCheck(examId, studentName, studentNumber, false, classId, className);
     if (!preCheck.success) return preCheck;
     const exam = preCheck.exam;
 
@@ -426,7 +426,7 @@ class FirebaseService {
    * skipDuplicateCheck: lewati kunci sesi-ganda (dipakai jalur akses tanpa
    * identitas siswa, karena tidak ada nama/nomor unik untuk dibandingkan).
    */
-  async _preSessionCheck(examId, studentName, studentNumber, skipDuplicateCheck = false) {
+  async _preSessionCheck(examId, studentName, studentNumber, skipDuplicateCheck = false, classId = null, className = '') {
     const isPaused = await this.isGlobalExamPaused();
     if (isPaused) {
       return {
@@ -454,15 +454,27 @@ class FirebaseService {
     }
 
     const sessions = await this.getActiveSessions();
+    const normalize = v => String(v === null || v === undefined ? '' : v).trim().toUpperCase().replace(/\s+/g, '');
     const cleanStudentName = (studentName || '').trim().toLowerCase();
-    const cleanStudentNumber = (studentNumber || '').trim();
+    const cleanStudentNumber = normalize(studentNumber);
+    const hasNumber = cleanStudentNumber && cleanStudentNumber !== '-';
 
     const previousSession = sessions.find(s => {
       if (s.exam_id !== exam.id) return false;
-      const matchNumber = cleanStudentNumber && cleanStudentNumber !== '-' && s.student_number === cleanStudentNumber;
-      const matchName = cleanStudentName && (s.student_name || '').trim().toLowerCase() === cleanStudentName;
       const isLockedStatus = s.status === 'completed' || s.status === 'terminated' || s.status === 'expired';
-      return (matchNumber || matchName) && isLockedStatus && !s.is_reset_allowed;
+      if (!isLockedStatus || s.is_reset_allowed) return false;
+
+      if (hasNumber) {
+        // Siswa terdaftar: No. Peserta bisa sama antar kelas, jadi WAJIB
+        // dicocokkan bersama kelasnya. Nama tidak dipakai untuk mengunci.
+        if (normalize(s.student_number) !== cleanStudentNumber) return false;
+        if (classId && s.class_id) return s.class_id === classId;
+        if (className && s.class_name) return String(s.class_name).trim() === String(className).trim();
+        return true; // data lama tanpa info kelas
+      }
+
+      // Jalur link/scan tanpa nomor peserta: pakai nama sebagai pembeda.
+      return cleanStudentName && (s.student_name || '').trim().toLowerCase() === cleanStudentName;
     });
 
     if (previousSession) {
