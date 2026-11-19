@@ -378,3 +378,146 @@
     display: none;
   }
 }
+
+/* ==============================================================================
+   MINIMAL SIDEBAR REFRESH — ikon garis, lebih rapi, + perbaikan menu HP
+   ============================================================================== */
+
+/* Ikon garis (sprite SVG) */
+.ico {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+.ico-sm { width: 16px; height: 16px; }
+.admin-search-icon.ico { width: 16px; height: 16px; }
+
+/* Sidebar lebih ringkas */
+.sidebar-brand {
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: var(--bg-surface);
+}
+
+.sidebar-menu {
+  padding: 0.75rem 0.85rem 1rem;
+  gap: 0.15rem;
+}
+
+.sidebar-section-title {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-subtle);
+  padding: 0.5rem 0.75rem 0.3rem;
+  margin-top: 0.85rem;
+}
+.sidebar-section-title:first-child { margin-top: 0.25rem; }
+
+.sidebar-item {
+  position: relative;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.sidebar-item .ico {
+  width: 18px;
+  height: 18px;
+  color: var(--text-subtle);
+}
+
+.sidebar-item:hover .ico { color: var(--primary-700); }
+
+.sidebar-item.active {
+  font-weight: 700;
+}
+.sidebar-item.active .ico { color: var(--primary-700); }
+[data-theme="dark"] .sidebar-item.active .ico { color: var(--primary-300); }
+
+/* Garis penanda halaman aktif */
+.sidebar-item.active::before {
+  content: '';
+  position: absolute;
+  left: -0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 18px;
+  border-radius: 0 3px 3px 0;
+  background: var(--primary-600);
+}
+
+.sidebar-footer {
+  padding: 0.85rem;
+  background: var(--bg-surface);
+}
+.sidebar-footer .btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.menu-toggle .ico { width: 20px; height: 20px; }
+
+/* Tombol tutup & overlay (hanya dipakai di HP/tablet) */
+.sidebar-close {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.sidebar-close:hover {
+  background: var(--bg-surface-muted);
+  color: var(--text-main);
+}
+
+.sidebar-overlay { display: none; }
+
+@media (max-width: 992px) {
+  /* Tombol ☰ tampil di HP DAN tablet (sebelumnya hanya <= 768px) */
+  .admin-topbar .menu-toggle { display: flex; }
+
+  .admin-sidebar {
+    width: min(var(--sidebar-width), 86vw);
+    z-index: 1000;
+  }
+
+  .sidebar-close { display: inline-flex; }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+    z-index: 999;
+  }
+
+  body.sidebar-open .sidebar-overlay {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Cegah halaman di belakang ikut ter-scroll saat menu terbuka */
+  body.sidebar-open { overflow: hidden; }
+}
