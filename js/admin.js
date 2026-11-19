@@ -41,8 +41,57 @@ const AdminController = {
       item.addEventListener('click', () => {
         const tab = item.dataset.tab;
         if (tab) this.switchTab(tab);
+        // Di HP/tablet: menu otomatis menutup setelah memilih halaman
+        this.closeSidebar();
       });
     });
+
+    // Tutup menu dengan tombol Esc
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') this.closeSidebar();
+    });
+
+    // Kembali ke layar lebar (desktop): pastikan status "terbuka" dibersihkan
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 992) this.closeSidebar();
+    });
+
+    // Geser menu ke kiri untuk menutup (HP)
+    const sidebar = document.getElementById('adminSidebar');
+    if (sidebar) {
+      let startX = null;
+      sidebar.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, { passive: true });
+      sidebar.addEventListener('touchend', (e) => {
+        if (startX === null) return;
+        const dx = e.changedTouches[0].clientX - startX;
+        startX = null;
+        if (dx < -60) this.closeSidebar();
+      }, { passive: true });
+    }
+  },
+
+  /* --------------------------------------------------------------------
+     SIDEBAR (HP & TABLET): buka / tutup
+  -------------------------------------------------------------------- */
+  toggleSidebar() {
+    this._setSidebar(!document.body.classList.contains('sidebar-open'));
+  },
+
+  openSidebar() {
+    this._setSidebar(true);
+  },
+
+  closeSidebar() {
+    this._setSidebar(false);
+  },
+
+  _setSidebar(open) {
+    const sidebar = document.getElementById('adminSidebar');
+    if (!sidebar) return;
+    sidebar.classList.toggle('open', open);
+    document.body.classList.toggle('sidebar-open', open);
+    const toggleBtn = document.querySelector('.admin-topbar .menu-toggle');
+    if (toggleBtn) toggleBtn.setAttribute('aria-expanded', String(open));
   },
 
   switchTab(tabName) {
